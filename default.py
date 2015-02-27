@@ -72,8 +72,10 @@ class Cleaner(object):
     def __init__(self):
         debug("%s version %s loaded." % (__addon__.getAddonInfo("name").decode("utf-8"),
                                          __addon__.getAddonInfo("version").decode("utf-8")))
+        self.progressbar = xbmcgui.DialogProgress()
+        self.progress_percent = 1
 
-    def clean(self, video_type):
+    def clean(self, video_type, silent=True):
         """
         Clean all watched videos of the provided type.
 
@@ -93,13 +95,31 @@ class Cleaner(object):
             clean_this_video_type = get_setting(clean_music_videos)
 
         if clean_this_video_type:
-            for filename, title in self.get_expired_videos(video_type):
+            expired_videos = self.get_expired_videos(video_type)
+            if not silent:
+                amount_video_types = map(get_setting, [clean_movies, clean_tv_shows, clean_music_videos]).count(True)
+                debug("Updating progress bar again")
+                self.progressbar.update(int(self.progress_percent), "Cleaning {0}".format(video_type))
+
+                amount = len(expired_videos)
+                debug("Found {0} videos that may need cleaning.".format(amount))
+                try:
+                    increment = 1.0 / amount
+                except ZeroDivisionError:
+                    debug("ZeroDivisionError")
+                    increment = 33.0
+                    self.progress_percent += increment
+                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
+                    self.progressbar.update(int(self.progress_percent))
+                    # We don't care about increments if no videos have expired, so set it to 1/3 of the tasks
+            for filename, title in expired_videos:
                 unstacked_path = self.unstack(filename)
                 if xbmcvfs.exists(unstacked_path[0]):
                     if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         if get_setting(holding_folder) == "":
                             # No destination set, prompt user to set one now
                             if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
+                                # TODO: Check if we need to close the progress dialog
                                 xbmc.executebuiltin("Addon.OpenSettings(%s)" % __addonID__)
                             break
                         if get_setting(create_subdirs):
@@ -133,15 +153,22 @@ class Cleaner(object):
                             self.delete_empty_folders(os.path.dirname(filename))
                 else:
                     debug("%r was already deleted. Skipping." % filename, xbmc.LOGWARNING)
+
+                if not silent:
+                    self.progress_percent += increment * 100 / amount_video_types
+                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
+                    self.progressbar.update(int(self.progress_percent))
         else:
             debug("Cleaning of %s is disabled. Skipping." % video_type)
 
         return cleaned_files, count
 
-    def clean_all(self):
+    def clean_all(self, silent=True):
         """
         Clean up any watched videos in the Kodi library, satisfying any conditions set via the addon settings.
 
+        :param silent: Whether to run silently (i.e. hide the progress dialog) (defaults to True)
+        :type silent: bool
         :rtype: str
         :return: A single-line (localized) summary of the cleaning results to be used for a notification.
         """
@@ -151,15 +178,25 @@ class Cleaner(object):
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
             return None
 
+        if not silent:
+            debug("Creating progress dialog")
+            self.progressbar.create(__title__, "Starting cleaning routine")
+            self.progressbar.update(0)
+            xbmc.sleep(2000)  # TODO: Remove pause
+
         summary = {}
         cleaning_results, cleaned_files = [], []
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space)
                                                           and utils.disk_space_low()):
             for video_type in [self.MOVIES, self. MUSIC_VIDEOS, self.TVSHOWS]:
-                cleaned_files, count = self.clean(video_type)
+                cleaned_files, count = self.clean(video_type, silent)
                 if count > 0:
                     cleaning_results.extend(cleaned_files)
                     summary[video_type] = count
+
+        debug("Closing progress bar")
+        self.progressbar.close()
+        self.progress_percent = 0
 
         # Check if we need to perform any post-cleaning operations
         if cleaning_results:
@@ -292,7 +329,7 @@ class Cleaner(object):
                 raise
         finally:
             debug("Expired videos: " + str(expired_videos))
-            return expired_videos
+            return expired_videos  # TODO: Also return amount of videos for progressbar?
 
     def is_excluded(self, full_path):
         """Check if the file path is part of the excluded sources.
@@ -616,7 +653,7 @@ if __name__ == "__main__":
     if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
         xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
     else:
-        results = cleaner.clean_all()
+        results = cleaner.clean_all(False)
         if results:
             # Videos were cleaned. Ask the user to view the log file.
             # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
