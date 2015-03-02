@@ -73,7 +73,7 @@ class Cleaner(object):
         debug("%s version %s loaded." % (__addon__.getAddonInfo("name").decode("utf-8"),
                                          __addon__.getAddonInfo("version").decode("utf-8")))
         self.progressbar = xbmcgui.DialogProgress()
-        self.progress_percent = 1
+        self.progress_percent = 0
 
     def clean(self, video_type, silent=True):
         """
@@ -99,6 +99,7 @@ class Cleaner(object):
             if not silent:
                 amount_video_types = map(get_setting, [clean_movies, clean_tv_shows, clean_music_videos]).count(True)
                 debug("Updating progress bar again")
+                # TODO: Translate the progress message
                 self.progressbar.update(int(self.progress_percent), "Cleaning {0}".format(video_type))
 
                 amount = len(expired_videos)
@@ -107,11 +108,11 @@ class Cleaner(object):
                     increment = 1.0 / amount
                 except ZeroDivisionError:
                     debug("ZeroDivisionError")
-                    increment = 33.0
+                    # We don't care about increments if no videos have expired, so set it to 1/3 of the tasks
+                    increment = 100 / amount_video_types
                     self.progress_percent += increment
                     debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
                     self.progressbar.update(int(self.progress_percent))
-                    # We don't care about increments if no videos have expired, so set it to 1/3 of the tasks
             for filename, title in expired_videos:
                 unstacked_path = self.unstack(filename)
                 if xbmcvfs.exists(unstacked_path[0]):
@@ -660,4 +661,4 @@ if __name__ == "__main__":
             if xbmcgui.Dialog().yesno(utils.translate(32514), results, utils.translate(32519)):
                 xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
         else:
-            notify(utils.translate(32520))
+            xbmcgui.Dialog().ok(__title__, utils.translate(32520))
