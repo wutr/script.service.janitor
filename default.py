@@ -70,8 +70,8 @@ class Cleaner(object):
     stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
 
     def __init__(self):
-        debug("%s version %s loaded." % (__addon__.getAddonInfo("name").decode("utf-8"),
-                                         __addon__.getAddonInfo("version").decode("utf-8")))
+        debug("{0!s} version {1!s} loaded.".format(__addon__.getAddonInfo("name").decode("utf-8"),
+                                                   __addon__.getAddonInfo("version").decode("utf-8")))
         self.progressbar = xbmcgui.DialogProgress()
         self.progress_percent = 0
 
@@ -97,6 +97,7 @@ class Cleaner(object):
         if clean_this_video_type:
             expired_videos = self.get_expired_videos(video_type)
             if not silent:
+                # TODO: Change from 1 dialog for all types to 1 dialog per type
                 amount_video_types = map(get_setting, [clean_movies, clean_tv_shows, clean_music_videos]).count(True)
                 debug("Updating progress bar again")
                 # TODO: Translate the progress message
@@ -121,7 +122,7 @@ class Cleaner(object):
                             # No destination set, prompt user to set one now
                             if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
                                 # TODO: Check if we need to close the progress dialog
-                                xbmc.executebuiltin("Addon.OpenSettings(%s)" % __addonID__)
+                                xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
                             break
                         if get_setting(create_subdirs):
                             if isinstance(title, unicode):
@@ -153,14 +154,14 @@ class Cleaner(object):
                             self.clean_related_files(filename)
                             self.delete_empty_folders(os.path.dirname(filename))
                 else:
-                    debug("%r was already deleted. Skipping." % filename, xbmc.LOGWARNING)
+                    debug("{0!r} was already deleted. Skipping.".format(filename), xbmc.LOGWARNING)
 
                 if not silent:
                     self.progress_percent += increment * 100 / amount_video_types
                     debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
                     self.progressbar.update(int(self.progress_percent))
         else:
-            debug("Cleaning of %s is disabled. Skipping." % video_type)
+            debug("Cleaning of {0} is disabled. Skipping.".format(video_type))
 
         return cleaned_files, count
 
@@ -236,13 +237,10 @@ class Cleaner(object):
             else:
                 video_type = ""
 
-            summary += "%d %s, " % (amount, video_type)
+            summary += "{0:d} {1}, ".format(amount, video_type)
 
         # strip the comma and space from the last iteration and add the localized suffix
-        if summary:
-            return "%s%s" % (summary.rstrip(", "), utils.translate(32518))
-        else:
-            return ""
+        return "{0}{1}".format(summary.rstrip(", "), utils.translate(32518)) if summary else ""
 
     def get_expired_videos(self, option):
         """
@@ -259,8 +257,8 @@ class Cleaner(object):
         # A non-exhaustive list of pre-defined filters to use during JSON-RPC requests
         # These are possible conditions that must be met before a video can be deleted
         by_playcount = {"field": "playcount", "operator": "greaterthan", "value": "0"}
-        by_date_played = {"field": "lastplayed", "operator": "notinthelast", "value": "%d" % get_setting(expire_after)}
-        by_minimum_rating = {"field": "rating", "operator": "lessthan", "value": "%d" % get_setting(minimum_rating)}
+        by_date_played = {"field": "lastplayed", "operator": "notinthelast", "value": "{0:f}".format(get_setting(expire_after))}
+        by_minimum_rating = {"field": "rating", "operator": "lessthan", "value": "{0:f}".format(get_setting(minimum_rating))}
         by_no_rating = {"field": "rating", "operator": "isnot", "value": "0"}
         by_progress = {"field": "inprogress", "operator": "false", "value": ""}
 
@@ -280,7 +278,7 @@ class Cleaner(object):
             if s and f["field"] in self.supported_filter_fields[option]:
                 enabled_filters.append(f)
 
-        debug("[%s] Filters enabled: %r" % (self.methods[option], enabled_filters))
+        debug("[{0}] Filters enabled: {1!r}".format(self.methods[option], enabled_filters))
 
         filters = {"and": enabled_filters}
 
@@ -296,12 +294,12 @@ class Cleaner(object):
 
         rpc_cmd = json.dumps(request)
         response = xbmc.executeJSONRPC(rpc_cmd)
-        debug("[%s] Response: %r" % (self.methods[option], response))
+        debug("[{0}] Response: {1!r}".format(self.methods[option], response))
         result = json.loads(response)
 
         try:
             error = result["error"]
-            debug("An error occurred. %r" % error)
+            debug("An error occurred. {0!r}".format(error))
             return None
         except KeyError as ke:
             if "error" in ke:
@@ -313,7 +311,7 @@ class Cleaner(object):
         expired_videos = []
         response = result["result"]
         try:
-            debug("Found %d watched %s matching your conditions" % (response["limits"]["total"], option))
+            debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
             debug("JSON Response: " + str(response))
             for video in response[option]:
                 # Gather all properties and add it to this video's information
@@ -325,11 +323,11 @@ class Cleaner(object):
             if option in ke:
                 pass  # no expired videos found
             else:
-                debug("KeyError: %r not found" % ke, xbmc.LOGWARNING)
-                debug("%r" % response, xbmc.LOGWARNING)
+                debug("KeyError: {0!r} not found".format(ke), xbmc.LOGWARNING)
+                debug("{0!r}".format(response), xbmc.LOGWARNING)
                 raise
         finally:
-            debug("Expired videos: " + str(expired_videos))
+            debug("Expired videos: {0}".format(expired_videos))
             return expired_videos  # TODO: Also return amount of videos for progressbar?
 
     def is_excluded(self, full_path):
@@ -362,33 +360,33 @@ class Cleaner(object):
                         # Only normalize non-empty excluded paths
                         normalized_exclusions.append(pattern.match(ex).group("tail").lower())
                 except (AttributeError, IndexError, KeyError) as err:
-                    debug("Could not parse the excluded network path %r\n%s" % (ex, err), xbmc.LOGWARNING)
+                    debug("Could not parse the excluded network path {0!r}\n{1}".format(ex, err), xbmc.LOGWARNING)
                     return True
 
-            debug("Conversion result: %r" % normalized_exclusions)
+            debug("Conversion result: {0!r}".format(normalized_exclusions))
 
             debug("Proceeding to match a file with the exclusion paths")
-            debug("The file to match is %r" % full_path)
+            debug("The file to match is {0!r}".format(full_path))
             result = pattern.match(full_path)
 
             try:
                 debug("Converting file path for easier comparison.")
                 converted_path = result.group("tail").lower()
-                debug("Result: %r" % converted_path)
+                debug("Result: {0!r}".format(converted_path))
                 for ex in normalized_exclusions:
-                    debug("Checking against exclusion %r." % ex)
+                    debug("Checking against exclusion {0!r}.".format(ex))
                     if converted_path.startswith(ex):
-                        debug("File %r matches excluded path %r." % (converted_path, ex))
+                        debug("File {0!r} matches excluded path {1!r}.".format(converted_path, ex))
                         return True
 
             except (AttributeError, IndexError, KeyError) as err:
-                debug("Error converting %r. No files will be deleted.\n%s" % (full_path, err), xbmc.LOGWARNING)
+                debug("Error converting {0!r}. No files will be deleted.\n{1}".format(full_path, err), xbmc.LOGWARNING)
                 return True
         else:
             debug("Detected a local path")
             for ex in exclusions:
                 if ex and full_path.startswith(ex):
-                    debug("File %r matches excluded path %r." % (full_path, ex))
+                    debug("File {0!r} matches excluded path {1!r}.".format(full_path, ex))
                     return True
 
         debug("No match was found with an excluded path.")
@@ -405,10 +403,10 @@ class Cleaner(object):
         if isinstance(path, unicode):
             path = path.encode("utf-8")
         if path.startswith("stack://"):
-            debug("Unstacking %r." % path)
+            debug("Unstacking {0!r}.".format(path))
             return path.replace("stack://", "").split(" , ")
         else:
-            debug("Unstacking %r is not needed." % path)
+            debug("Unstacking {0!r} is not needed.".format(path))
             return [path]
 
     def get_stack_bare_title(self, filenames):
@@ -441,7 +439,7 @@ class Cleaner(object):
         :rtype: bool
         :return: True if (at least one) file was deleted successfully, False otherwise.
         """
-        debug("Attempting to delete %r" % location)
+        debug("Attempting to delete {0!r}".format(location))
 
         paths = self.unstack(location)
         success = []
@@ -454,7 +452,7 @@ class Cleaner(object):
             if xbmcvfs.exists(p):
                 success.append(bool(xbmcvfs.delete(p)))
             else:
-                debug("File %r no longer exists." % p, xbmc.LOGERROR)
+                debug("File {0!r} no longer exists.".format(p), xbmc.LOGERROR)
                 success.append(False)
 
         return any(success)
@@ -478,23 +476,23 @@ class Cleaner(object):
             return False
 
         folder = self.unstack(location)[0]  # Stacked paths should have the same parent, use any
-        debug("Checking if %r is empty" % folder)
+        debug("Checking if {0!r} is empty".format(folder))
         ignored_file_types = [file_ext.strip() for file_ext in get_setting(ignore_extensions).split(",")]
-        debug("Ignoring file types %r" % ignored_file_types)
+        debug("Ignoring file types {0!r}".format(ignored_file_types))
 
         subfolders, files = xbmcvfs.listdir(folder)
-        debug("Contents of %r:\nSubfolders: %r\nFiles: %r" % (folder, subfolders, files))
+        debug("Contents of {0!r}:\nSubfolders: {1!r}\nFiles: {2!r}".format(folder, subfolders, files))
 
         empty = True
         try:
             for f in files:
                 _, ext = os.path.splitext(f)
-                if ext and not ext in ignored_file_types:  # ensure f is not a folder and its extension is not ignored
-                    debug("Found non-ignored file type %r" % ext)
+                if ext and ext not in ignored_file_types:  # ensure f is not a folder and its extension is not ignored
+                    debug("Found non-ignored file type {0!r}".format(ext))
                     empty = False
                     break
         except OSError as oe:
-            debug("Error deriving file extension. Errno " + str(oe.errno), xbmc.LOGERROR)
+            debug("Error deriving file extension. Errno {0}".format(oe.errno), xbmc.LOGERROR)
             empty = False
 
         # Only delete directories if we found them to be empty (containing no files or filetypes we ignored)
@@ -542,7 +540,7 @@ class Cleaner(object):
             else:
                 name, ext = os.path.splitext(name)
 
-            debug("Attempting to match related files in %r with prefix %r" % (path, name))
+            debug("Attempting to match related files in {0!r} with prefix {1!r}".format(path, name))
             for extra_file in xbmcvfs.listdir(path)[1]:
                 if isinstance(path, unicode):
                     path = path.encode("utf-8")
@@ -552,16 +550,16 @@ class Cleaner(object):
                     name = name.encode("utf-8")
 
                 if extra_file.startswith(name):
-                    debug("%r starts with %r." % (extra_file, name))
+                    debug("{0!r} starts with {1!r}.".format(extra_file, name))
                     extra_file_path = os.path.join(path, extra_file)
                     if get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if extra_file_path not in path_list:
-                            debug("Deleting %r." % extra_file_path)
+                            debug("Deleting {0!r}.".format(extra_file_path))
                             xbmcvfs.delete(extra_file_path)
                     elif get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         new_extra_path = os.path.join(dest_folder, os.path.basename(extra_file))
                         if new_extra_path not in path_list:
-                            debug("Moving %r to %r." % (extra_file_path, new_extra_path))
+                            debug("Moving {0!r} to {1!r}.".format(extra_file_path, new_extra_path))
                             xbmcvfs.rename(extra_file_path, new_extra_path)
             debug("Finished searching for related files.")
         else:
@@ -593,13 +591,13 @@ class Cleaner(object):
             return 0
 
         for p in paths:
-            debug("Attempting to move %r to %r." % (p, dest_folder))
+            debug("Attempting to move {0!r} to {1!r}.".format(p, dest_folder))
             if xbmcvfs.exists(p):
                 if not xbmcvfs.exists(dest_folder):
                     if xbmcvfs.mkdirs(dest_folder):
-                        debug("Created destination %r." % dest_folder)
+                        debug("Created destination {0!r}.".format(dest_folder))
                     else:
-                        debug("Destination %r could not be created." % dest_folder, xbmc.LOGERROR)
+                        debug("Destination {0!r} could not be created.".format(dest_folder), xbmc.LOGERROR)
                         return -1
 
                 new_path = os.path.join(dest_folder, os.path.basename(p))
@@ -626,7 +624,7 @@ class Cleaner(object):
                         else:
                             return -1
                 else:
-                    debug("Moving %r to %r." % (p, new_path))
+                    debug("Moving {0!r} to {1!r}.".format(p, new_path))
                     move_success = bool(xbmcvfs.rename(p, new_path))
                     copy_success, delete_success = False, False
                     if not move_success:
@@ -645,7 +643,7 @@ class Cleaner(object):
                         files_moved_successfully += 1
 
             else:
-                debug("File %r is no longer available." % p, xbmc.LOGWARNING)
+                debug("File {0!r} is no longer available.".format(p), xbmc.LOGWARNING)
 
         return 1 if len(paths) == files_moved_successfully else -1
 
