@@ -1,3 +1,14 @@
+Version 4.1.0
+==============
+- [NEW] Helix compatibility
+- [NEW] Show information dialogs when errors occur
+- [NEW] Change name to Kodi File Cleaner
+- [NEW] Kodi library cleaning occurs silently
+- [NEW] Allow users to reset excluded paths by pressing a button
+
+- [FIX] Fall back to copy and delete in case of permission problems
+- [FIX] Log file was not being created automatically
+
 Version 4.0.1
 ==============
 - [NEW] Specify whether to clean up or view log on manual run
