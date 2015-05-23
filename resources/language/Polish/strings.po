@@ -351,16 +351,16 @@ msgstr "Wszystkie Twoje wykluczenia zostaną zresetowane."
 
 msgctxt "#32611"
 msgid "Errors occurred while moving"
-msgstr ""
+msgstr "Błedy podczas przenoszenia"
 
 msgctxt "#32612"
 msgid "Not all files could be moved to the holding folder."
-msgstr ""
+msgstr "Nie wszystkie pliki mogły zostać przeniesione do folderu"
 
 msgctxt "#32613"
 msgid "Ensure you have appropriate permissions and try again."
-msgstr ""
+msgstr "Upewnij się, że masz odpowiednie uprawnienia i spróbuj ponownie"
 
 msgctxt "#32614"
 msgid "Please check the log file for details and move the particular files manually."
-msgstr ""
+msgstr "Sprawdź plik log po szczegóły następnie przenieś odpowiednie pliki ręcznie"
