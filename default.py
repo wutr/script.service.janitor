@@ -313,7 +313,7 @@ class Cleaner(object):
 
         if r"://" in full_path:
             debug("Detected a network path")
-            pattern = re.compile("(?:smb|afp|nfs)://(?:(?:.+):(?:.+)@)?(?P<tail>.*)$", flags=re.U | re.I)
+            pattern = re.compile("(?:smb|nfs)://(?:(?:.+):(?:.+)@)?(?P<tail>.*)$", flags=re.U | re.I)
 
             debug("Converting excluded network paths for easier comparison")
             normalized_exclusions = []
