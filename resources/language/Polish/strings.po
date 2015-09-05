@@ -152,7 +152,7 @@ msgid "Wait a certain number of days after watching before cleaning"
 msgstr "Odczekaj określoną ilość dni po obejrzeniu zanim wyczyścisz"
 
 msgctxt "#32303"
-msgid "Days after which a video is considerd to have expired"
+msgid "Days after which a video is considered to have expired"
 msgstr "Dni po których wideo jest określane jako wygasłe"
 
 msgctxt "#32304"

@@ -152,8 +152,8 @@ msgid "Wait a certain number of days after watching before cleaning"
 msgstr "Schoon video's pas een aantal dagen na bekijken op"
 
 msgctxt "#32303"
-msgid "Days after which a video is considerd to have expired"
-msgstr "Aantal dagen waarna een bestand als verlopen wordt beschouwd"
+msgid "Days after which a video is considered to have expired"
+msgstr "Aantal dagen waarna een bestand verloopt"
 
 msgctxt "#32304"
 msgid "Only clean videos with low ratings"
