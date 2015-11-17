@@ -72,8 +72,6 @@ class Cleaner(object):
     def __init__(self):
         debug("{0!s} version {1!s} loaded.".format(__addon__.getAddonInfo("name").decode("utf-8"),
                                                    __addon__.getAddonInfo("version").decode("utf-8")))
-        self.progressbar = xbmcgui.DialogProgress()
-        self.progress_percent = 0
 
     def clean(self, video_type, silent=True):
         """
@@ -81,39 +79,42 @@ class Cleaner(object):
 
         :type video_type: str
         :param video_type: The type of videos to clean (one of TVSHOWS, MOVIES, MUSIC_VIDEOS).
+        :type silent: bool
+        :param silent: Whether or not to show a progress dialog during cleaning.
         :rtype: (list, int)
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned.
         """
         cleaned_files = []
         count = 0
-        clean_this_video_type = False
+
+        progress = xbmcgui.DialogProgress()
+        progress.create(__title__, "T1 Cleaning {0!s}".format(video_type), "T2 ", "T3 ")
+        progress.update(0)
+        xbmc.sleep(2000)
+
         if video_type == self.TVSHOWS:
             clean_this_video_type = get_setting(clean_tv_shows)
         elif video_type == self.MOVIES:
             clean_this_video_type = get_setting(clean_movies)
         elif video_type == self.MUSIC_VIDEOS:
             clean_this_video_type = get_setting(clean_music_videos)
+        else:
+            debug("Incorrect video type specified: {0!r}".format(video_type), xbmc.LOGERROR)
+            return [], 0
+
+        progress_percent = 0
 
         if clean_this_video_type:
             expired_videos = self.get_expired_videos(video_type)
             if not silent:
-                # TODO: Change from 1 dialog for all types to 1 dialog per type
-                amount_video_types = map(get_setting, [clean_movies, clean_tv_shows, clean_music_videos]).count(True)
                 debug("Updating progress bar again")
-                # TODO: Translate the progress message
-                self.progressbar.update(int(self.progress_percent), "Cleaning {0}".format(video_type))
-
                 amount = len(expired_videos)
                 debug("Found {0} videos that may need cleaning.".format(amount))
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
-                    debug("ZeroDivisionError")
-                    # We don't care about increments if no videos have expired, so set it to 1/3 of the tasks
-                    increment = 100 / amount_video_types
-                    self.progress_percent += increment
-                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
-                    self.progressbar.update(int(self.progress_percent))
+                    progress.update(100, "A1 No videos were found that need cleaning", "A2 Go watch some videos and check back soon", "A3 Even more text here")
+
             for filename, title in expired_videos:
                 unstacked_path = self.unstack(filename)
                 if xbmcvfs.exists(unstacked_path[0]):
@@ -157,11 +158,18 @@ class Cleaner(object):
                     debug("{0!r} was already deleted. Skipping.".format(filename), xbmc.LOGWARNING)
 
                 if not silent:
-                    self.progress_percent += increment * 100 / amount_video_types
-                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=self.progress_percent, amount=amount, increment=increment))
-                    self.progressbar.update(int(self.progress_percent))
+                    progress_percent += increment * 100
+                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
+                    progress.update(int(progress_percent), "B1 {0!s} {1!s} have expired".format(amount, video_type), "B2 Matching expired videos with excluded folders", "B3 {0!s}".format(title))
+                    xbmc.sleep(2000)
         else:
-            debug("Cleaning of {0} is disabled. Skipping.".format(video_type))
+            debug("Cleaning of {0!r} is disabled. Skipping.".format(video_type))
+            if not silent:
+                progress.update(100, "C1 Cleaning of {0!s} is disabled".format(video_type), "C2 Extra text", "C3 ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+        debug("Closing progress bar")
+        xbmc.sleep(2000)
+        progress.close()
 
         return cleaned_files, count
 
@@ -180,12 +188,6 @@ class Cleaner(object):
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
             return None
 
-        if not silent:
-            debug("Creating progress dialog")
-            self.progressbar.create(__title__, "Starting cleaning routine")
-            self.progressbar.update(0)
-            xbmc.sleep(2000)  # TODO: Remove pause
-
         summary = {}
         cleaning_results, cleaned_files = [], []
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space)
@@ -195,10 +197,6 @@ class Cleaner(object):
                 if count > 0:
                     cleaning_results.extend(cleaned_files)
                     summary[video_type] = count
-
-        debug("Closing progress bar")
-        self.progressbar.close()
-        self.progress_percent = 0
 
         # Check if we need to perform any post-cleaning operations
         if cleaning_results:
@@ -297,6 +295,7 @@ class Cleaner(object):
         debug("[{0}] Response: {1!r}".format(self.methods[option], response))
         result = json.loads(response)
 
+        # Check the results for errors
         try:
             error = result["error"]
             debug("An error occurred. {0!r}".format(error))
@@ -314,6 +313,11 @@ class Cleaner(object):
             debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
             debug("JSON Response: " + str(response))
             for video in response[option]:
+                # Test for file exclusions
+                if self.is_excluded(video["file"]):
+                    debug("{0!r} matches an exclusion, not including it in the list of expired videos".format(video))
+                    continue
+
                 # Gather all properties and add it to this video's information
                 temp = []
                 for p in self.properties[option]:
@@ -328,7 +332,7 @@ class Cleaner(object):
                 raise
         finally:
             debug("Expired videos: {0}".format(expired_videos))
-            return expired_videos  # TODO: Also return amount of videos for progressbar?
+            return expired_videos
 
     def is_excluded(self, full_path):
         """Check if the file path is part of the excluded sources.
