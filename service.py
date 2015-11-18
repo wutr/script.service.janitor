@@ -25,15 +25,21 @@ def autostart():
             delayed_start_ticker = get_setting(delayed_start) * 60 / service_sleep
 
             if delayed_completed and ticker >= scan_interval_ticker:
-                results = cleaner.clean_all()
+                results, status = cleaner.clean_all()
                 if results:
                     notify(results)
+                elif status == cleaner.STATUS_ABORTED:
+                    # Do not report anything if user aborted cleaning
+                    pass
                 ticker = 0
             elif not delayed_completed and ticker >= delayed_start_ticker:
                 delayed_completed = True
-                results = cleaner.clean_all()
+                results, status = cleaner.clean_all()
                 if results:
                     notify(results)
+                elif status == cleaner.STATUS_ABORTED:
+                    # Do not report anything if user aborted cleaning
+                    pass
                 ticker = 0
 
             xbmc.sleep(service_sleep * 1000)

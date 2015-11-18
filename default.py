@@ -37,6 +37,10 @@ class Cleaner(object):
     DEFAULT_ACTION_CLEAN = "0"
     DEFAULT_ACTION_LOG = "1"
 
+    STATUS_SUCCESS = 1
+    STATUS_FAILURE = 2
+    STATUS_ABORTED = 3
+
     movie_filter_fields = ["title", "plot", "plotoutline", "tagline", "votes", "rating", "time", "writers",
                            "playcount", "lastplayed", "inprogress", "genre", "country", "year", "director",
                            "actor", "mpaarating", "top250", "studio", "hastrailer", "filename", "path", "set",
@@ -81,16 +85,18 @@ class Cleaner(object):
         :param video_type: The type of videos to clean (one of TVSHOWS, MOVIES, MUSIC_VIDEOS).
         :type silent: bool
         :param silent: Whether or not to show a progress dialog during cleaning.
-        :rtype: (list, int)
-        :return: A list of the filenames that were cleaned, as well as the number of files cleaned.
+        :rtype: (list, int, int)
+        :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
         cleaned_files = []
         count = 0
+        ret_status = self.STATUS_SUCCESS
 
-        progress = xbmcgui.DialogProgress()
-        progress.create(__title__, "T1 Cleaning {0!s}".format(video_type), "T2 ", "T3 ")
-        progress.update(0)
-        xbmc.sleep(2000)
+        if not silent:
+            progress = xbmcgui.DialogProgress()
+            progress.create(__title__, "T1 Cleaning {0!s}".format(video_type), "T2 ", "T3 ")
+            progress.update(0)
+            xbmc.sleep(2000)
 
         if video_type == self.TVSHOWS:
             clean_this_video_type = get_setting(clean_tv_shows)
@@ -107,23 +113,23 @@ class Cleaner(object):
         if clean_this_video_type:
             expired_videos = self.get_expired_videos(video_type)
             if not silent:
-                debug("Updating progress bar again")
                 amount = len(expired_videos)
                 debug("Found {0} videos that may need cleaning.".format(amount))
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
-                    progress.update(100, "A1 No videos were found that need cleaning", "A2 Go watch some videos and check back soon", "A3 Even more text here")
+                    progress.update(0, "A1 No videos were found that need cleaning", "A2 Go watch some videos and check back soon", "A3 Even more text here")
 
             for filename, title in expired_videos:
                 unstacked_path = self.unstack(filename)
                 if xbmcvfs.exists(unstacked_path[0]):
                     if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
+                        # No destination set, prompt user to set one now
                         if get_setting(holding_folder) == "":
-                            # No destination set, prompt user to set one now
                             if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
                                 # TODO: Check if we need to close the progress dialog
                                 xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
+                                ret_status = self.STATUS_ABORTED
                             break
                         if get_setting(create_subdirs):
                             if isinstance(title, unicode):
@@ -161,17 +167,22 @@ class Cleaner(object):
                     progress_percent += increment * 100
                     debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
                     progress.update(int(progress_percent), "B1 {0!s} {1!s} have expired".format(amount, video_type), "B2 Matching expired videos with excluded folders", "B3 {0!s}".format(title))
+                    if progress.iscanceled():
+                        debug("User cancelled. Stopping. We still need to clean {0:d} files.".format(amount - count), xbmc.LOGWARNING)
+                        ret_status = self.STATUS_ABORTED
+                        break
                     xbmc.sleep(2000)
         else:
             debug("Cleaning of {0!r} is disabled. Skipping.".format(video_type))
             if not silent:
-                progress.update(100, "C1 Cleaning of {0!s} is disabled".format(video_type), "C2 Extra text", "C3 ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                progress.update(0, "C1 Cleaning of {0!s} is disabled".format(video_type), "C2 Extra text", "C3 ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-        debug("Closing progress bar")
-        xbmc.sleep(2000)
-        progress.close()
+        if not silent:
+            debug("Closing progress bar")
+            xbmc.sleep(2000)
+            progress.close()
 
-        return cleaned_files, count
+        return cleaned_files, count, ret_status
 
     def clean_all(self, silent=True):
         """
@@ -183,6 +194,7 @@ class Cleaner(object):
         :return: A single-line (localized) summary of the cleaning results to be used for a notification.
         """
         debug("Starting cleaning routine.")
+        status = self.STATUS_SUCCESS
 
         if get_setting(clean_when_idle) and xbmc.Player().isPlaying():
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
@@ -192,8 +204,8 @@ class Cleaner(object):
         cleaning_results, cleaned_files = [], []
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space)
                                                           and utils.disk_space_low()):
-            for video_type in [self.MOVIES, self. MUSIC_VIDEOS, self.TVSHOWS]:
-                cleaned_files, count = self.clean(video_type, silent)
+            for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
+                cleaned_files, count, status = self.clean(video_type, silent)
                 if count > 0:
                     cleaning_results.extend(cleaned_files)
                     summary[video_type] = count
@@ -212,7 +224,7 @@ class Cleaner(object):
                 else:
                     xbmc.executebuiltin("XBMC.CleanLibrary(video, false)")
 
-        return self.summarize(summary)
+        return self.summarize(summary), status
 
     def summarize(self, details):
         """
@@ -656,11 +668,14 @@ if __name__ == "__main__":
     if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
         xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
     else:
-        results = cleaner.clean_all(False)
+        results, return_status = cleaner.clean_all(False)
         if results:
             # Videos were cleaned. Ask the user to view the log file.
             # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
             if xbmcgui.Dialog().yesno(utils.translate(32514), results, utils.translate(32519)):
                 xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
+        elif return_status == cleaner.STATUS_ABORTED:
+            # Do not show cleaning results in case user aborted, e.g. to set holding folder
+            pass
         else:
             xbmcgui.Dialog().ok(__title__, utils.translate(32520))
