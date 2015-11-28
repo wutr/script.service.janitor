@@ -30,6 +30,7 @@ Oorspronkelijk ontwikkeld door Andrew 'drewzh' Higginson (xbmcfilecleaner@drewzh
         <disclaimer lang="nl">Het is verstandig om videos pas permanent te verwijderen als je bekend bent met alle instellingen.</disclaimer>
         <platform>all</platform>
         <language/>
+        <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
         <source>https://github.com/Anthirian/script.filecleaner</source>
         <forum>http://forum.kodi.tv/showthread.php?tid=162517</forum>
         <website/>
