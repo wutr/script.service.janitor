@@ -190,8 +190,8 @@ class Cleaner(object):
 
         :param silent: Whether to run silently (i.e. hide the progress dialog) (defaults to True)
         :type silent: bool
-        :rtype: str
-        :return: A single-line (localized) summary of the cleaning results to be used for a notification.
+        :rtype: (str, int)
+        :return: A single-line (localized) summary of the cleaning results to be used for a notification, plus a status.
         """
         debug("Starting cleaning routine.")
         status = self.STATUS_SUCCESS
@@ -200,15 +200,15 @@ class Cleaner(object):
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
             return None
 
-        summary = {}
+        results = {}
         cleaning_results, cleaned_files = [], []
-        if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space)
-                                                          and utils.disk_space_low()):
+        if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and
+                                                          utils.disk_space_low()):
             for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
                 cleaned_files, count, status = self.clean(video_type, silent)
                 if count > 0:
                     cleaning_results.extend(cleaned_files)
-                    summary[video_type] = count
+                    results[video_type] = count
 
         # Check if we need to perform any post-cleaning operations
         if cleaning_results:
@@ -224,7 +224,7 @@ class Cleaner(object):
                 else:
                     xbmc.executebuiltin("XBMC.CleanLibrary(video, false)")
 
-        return self.summarize(summary), status
+        return self.summarize(results), status
 
     def summarize(self, details):
         """
