@@ -253,9 +253,10 @@ def notify(message, duration=5000, image=__icon__, level=xbmc.LOGNOTICE, sound=T
     :type sound: bool
     :param sound: (Optional) Whether or not to play a sound with the notification. (defaults to ``True``)
     """
-    debug(message, level)
-    if get_setting(notifications_enabled) and not (get_setting(notify_when_idle) and xbmc.Player().isPlaying()):
-        xbmcgui.Dialog().notification(__title__, message, image, duration, sound)
+    if message:
+        debug(message, level)
+        if get_setting(notifications_enabled) and not (get_setting(notify_when_idle) and xbmc.Player().isPlaying()):
+            xbmcgui.Dialog().notification(__title__, message, image, duration, sound)
 
 
 def debug(message, level=xbmc.LOGNOTICE):
