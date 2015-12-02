@@ -94,7 +94,7 @@ class Cleaner(object):
 
         if not silent:
             progress = xbmcgui.DialogProgress()
-            progress.create(__title__, "T1 Cleaning {0!s}".format(video_type), "T2 ", "T3 ")
+            progress.create(__title__, translate(32618).format(type=video_type), *map(translate, (32615, 32615)))
             progress.update(0)
             xbmc.sleep(2000)
 
@@ -118,7 +118,8 @@ class Cleaner(object):
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
-                    progress.update(0, "A1 No videos were found that need cleaning", "A2 Go watch some videos and check back soon", "A3 Even more text here")
+                    progress.update(0, *map(translate, (32621, 32622, 32615)))
+                    xbmc.sleep(2000)
 
             for filename, title in expired_videos:
                 unstacked_path = self.unstack(filename)
@@ -166,7 +167,7 @@ class Cleaner(object):
                 if not silent:
                     progress_percent += increment * 100
                     debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
-                    progress.update(int(progress_percent), "B1 {0!s} {1!s} have expired".format(amount, video_type), "B2 Matching expired videos with excluded folders", "B3 {0!s}".format(title))
+                    progress.update(int(progress_percent), translate(32616).format(amount=amount, type=video_type), translate(32617), "{0!s}".format(title))
                     if progress.iscanceled():
                         debug("User cancelled. Stopping. We still need to clean {0:d} files.".format(amount - count), xbmc.LOGWARNING)
                         ret_status = self.STATUS_ABORTED
@@ -175,7 +176,7 @@ class Cleaner(object):
         else:
             debug("Cleaning of {0!r} is disabled. Skipping.".format(video_type))
             if not silent:
-                progress.update(0, "C1 Cleaning of {0!s} is disabled".format(video_type), "C2 Extra text", "C3 ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                progress.update(0, translate(32624).format(type=video_type), *map(translate, (32625, 32615)))
 
         if not silent:
             debug("Closing progress bar")

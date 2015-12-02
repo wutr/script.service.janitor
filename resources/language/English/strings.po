@@ -281,8 +281,9 @@ msgctxt "#32519"
 msgid "Would you like to view the cleaning log?"
 msgstr ""
 
+#TODO: change to more general description why cleaning was not performed
 msgctxt "#32520"
-msgid "No cleaning required"
+msgid "No cleaning performed"
 msgstr ""
 
 msgctxt "#32521"
@@ -363,4 +364,41 @@ msgstr ""
 
 msgctxt "#32614"
 msgid "Please check the log file for details and move the particular files manually."
+msgstr ""
+
+
+# Progress dialog translations. Keep the text between brackets as is! All dialogs have three lines we need to fill.
+msgctxt "#32615"
+msgid " "
+msgstr "" # One space is required to remove line from previous dialog
+
+msgctxt "#32616"
+msgid "{amount} {type} have expired"
+msgstr ""
+
+msgctxt "#32617"
+msgid "Matching expired videos with excluded folders..."
+msgstr ""
+
+# Create progress dialog
+msgctxt "#32618"
+msgid "Cleaning {type}"
+msgstr ""
+
+# No videos match cleaning criteria
+msgctxt "#32621"
+msgid "No videos were found that need cleaning"
+msgstr ""
+
+msgctxt "#32622"
+msgid "Watch some videos or adjust your settings and try again"
+msgstr ""
+
+# Cleaning of this video type is not enabled
+msgctxt "#32624"
+msgid "Cleaning of {type} is disabled"
+msgstr ""
+
+msgctxt "#32625"
+msgid "Skipping cleaning..."
 msgstr ""
