@@ -199,7 +199,7 @@ class Cleaner(object):
 
         if get_setting(clean_when_idle) and xbmc.Player().isPlaying():
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
-            return None
+            return None, status
 
         results = {}
         cleaning_results, cleaned_files = [], []
