@@ -365,3 +365,39 @@ msgstr "Controleer of je de juiste rechten hebt en probeer het nogmaals."
 msgctxt "#32614"
 msgid "Please check the log file for details and move the particular files manually."
 msgstr "Controleer het logbestand voor meer informatie en verplaats de bestanden handmatig."
+
+# Vertalingen van de voortgangsvensters. Laat de tekst tussen accolades zo staan! Elk venster bevat drie regels om te vullen.
+msgctxt "#32615"
+msgid " "
+msgstr " " # Het is verplicht om tenminste een spatie te laten staan om de vorige regel te wissen.
+
+msgctxt "#32616"
+msgid "{amount} {type} have expired"
+msgstr "{amount} {type} zijn verlopen"
+
+msgctxt "#32617"
+msgid "Matching expired videos with excluded folders..."
+msgstr "Controleren op uitgezonderde mappen..."
+
+# Create progress dialog
+msgctxt "#32618"
+msgid "Cleaning {type}"
+msgstr "Opschonen van {type}"
+
+# No videos match cleaning criteria
+msgctxt "#32621"
+msgid "No videos were found that need cleaning"
+msgstr "Er zijn geen videos gevonden die opgeschoond moeten worden"
+
+msgctxt "#32622"
+msgid "Watch some videos or adjust your settings and try again"
+msgstr "Kijk wat video's of pas je instellingen aan en probeer nogmaals"
+
+# Cleaning of this video type is not enabled
+msgctxt "#32624"
+msgid "Cleaning of {type} is disabled"
+msgstr "Opschonen van {type} is niet geactiveerd"
+
+msgctxt "#32625"
+msgid "Skipping cleaning..."
+msgstr "Opschonen wordt overgeslagen..."
