@@ -91,10 +91,11 @@ class Cleaner(object):
         cleaned_files = []
         count = 0
         ret_status = self.STATUS_SUCCESS
+        type_translation = {self.MOVIES: translate(32626), self.MUSIC_VIDEOS: translate(32627), self.TVSHOWS: translate(32628)}
 
         if not silent:
             progress = xbmcgui.DialogProgress()
-            progress.create(__title__, translate(32618).format(type=video_type), *map(translate, (32615, 32615)))
+            progress.create(__title__, translate(32618).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
             progress.update(0)
             xbmc.sleep(2000)
 

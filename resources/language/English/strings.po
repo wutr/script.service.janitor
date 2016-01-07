@@ -402,3 +402,15 @@ msgstr ""
 msgctxt "#32625"
 msgid "Skipping cleaning..."
 msgstr ""
+
+msgctxt "#32626"
+msgid "movies"
+msgstr ""
+
+msgctxt "#32627"
+msgid "music videos"
+msgstr ""
+
+msgctxt "#32628"
+msgid "TV shows"
+msgstr ""

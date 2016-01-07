@@ -401,3 +401,15 @@ msgstr "Opschonen van {type} is niet geactiveerd"
 msgctxt "#32625"
 msgid "Skipping cleaning..."
 msgstr "Opschonen wordt overgeslagen..."
+
+msgctxt "#32626"
+msgid "movies"
+msgstr "films"
+
+msgctxt "#32627"
+msgid "music videos"
+msgstr "videoclips"
+
+msgctxt "#32628"
+msgid "TV shows"
+msgstr "TV-series"
