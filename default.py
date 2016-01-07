@@ -129,9 +129,10 @@ class Cleaner(object):
                         # No destination set, prompt user to set one now
                         if get_setting(holding_folder) == "":
                             if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
-                                # TODO: Check if we need to close the progress dialog
                                 xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
                                 ret_status = self.STATUS_ABORTED
+                            if not silent:
+                                progress.close()
                             break
                         if get_setting(create_subdirs):
                             if isinstance(title, unicode):
