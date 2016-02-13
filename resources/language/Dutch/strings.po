@@ -282,8 +282,8 @@ msgid "Would you like to view the cleaning log?"
 msgstr "Wil je het schoonmaaklogboek bekijken?"
 
 msgctxt "#32520"
-msgid "No cleaning required"
-msgstr "Schoonmaken is niet nodig"
+msgid "No cleaning required."
+msgstr "Schoonmaken is niet nodig."
 
 msgctxt "#32521"
 msgid "The destination folder is not set up."
@@ -372,35 +372,43 @@ msgid " "
 msgstr " " # Het is verplicht om tenminste een spatie te laten staan om de vorige regel te wissen.
 
 msgctxt "#32616"
-msgid "{amount} {type} have expired"
-msgstr "{amount} {type} zijn verlopen"
+msgid "[B]{amount}[/B] {type} have expired."
+msgstr "[B]{amount}[/B] {type} zijn verlopen."
 
 msgctxt "#32617"
-msgid "Matching expired videos with excluded folders..."
-msgstr "Controleren op uitgezonderde mappen..."
+msgid "Testing for exclusions."
+msgstr "Uitzonderingen controleren."
 
 # Create progress dialog
 msgctxt "#32618"
 msgid "Cleaning {type}"
 msgstr "Opschonen van {type}"
 
+msgctxt "#32619"
+msgid "Starting cleaning routine."
+msgstr "Opschonen wordt gestart."
+
 # No videos match cleaning criteria
 msgctxt "#32621"
-msgid "No videos were found that need cleaning"
-msgstr "Er zijn geen videos gevonden die opgeschoond moeten worden"
+msgid "Cleaning not required."
+msgstr "Opschonen niet nodig."
 
 msgctxt "#32622"
-msgid "Watch some videos or adjust your settings and try again"
-msgstr "Kijk wat video's of pas je instellingen aan en probeer nogmaals"
+msgid "Watch some videos or"
+msgstr "Bekijk een video of"
+
+msgctxt "#32623"
+msgid "adjust your settings."
+msgstr "pas je instellingen aan."
 
 # Cleaning of this video type is not enabled
 msgctxt "#32624"
-msgid "Cleaning of {type} is disabled"
-msgstr "Opschonen van {type} is niet geactiveerd"
+msgid "Cleaning {type} is disabled."
+msgstr "Opschonen van {type} is niet actief."
 
 msgctxt "#32625"
-msgid "Skipping cleaning..."
-msgstr "Opschonen wordt overgeslagen..."
+msgid "Skipping cleaning."
+msgstr "Opschonen wordt overgeslagen."
 
 msgctxt "#32626"
 msgid "movies"
@@ -411,5 +419,5 @@ msgid "music videos"
 msgstr "videoclips"
 
 msgctxt "#32628"
-msgid "TV shows"
-msgstr "TV-series"
+msgid "episodes"
+msgstr "afleveringen"

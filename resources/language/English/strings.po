@@ -373,11 +373,11 @@ msgid " "
 msgstr "" # One space is required to remove line from previous dialog
 
 msgctxt "#32616"
-msgid "{amount} {type} have expired"
+msgid "[B]{amount}[/B] {type} have expired."
 msgstr ""
 
 msgctxt "#32617"
-msgid "Matching expired videos with excluded folders..."
+msgid "Testing for exclusions."
 msgstr ""
 
 # Create progress dialog
@@ -385,22 +385,30 @@ msgctxt "#32618"
 msgid "Cleaning {type}"
 msgstr ""
 
+msgctxt "#32619"
+msgid "Starting cleaning routine."
+msgstr ""
+
 # No videos match cleaning criteria
 msgctxt "#32621"
-msgid "No videos were found that need cleaning"
+msgid "Cleaning not required."
 msgstr ""
 
 msgctxt "#32622"
-msgid "Watch some videos or adjust your settings and try again"
+msgid "Watch some videos or"
+msgstr ""
+
+msgctxt "#32623"
+msgid "adjust your settings."
 msgstr ""
 
 # Cleaning of this video type is not enabled
 msgctxt "#32624"
-msgid "Cleaning of {type} is disabled"
+msgid "Cleaning {type} is disabled."
 msgstr ""
 
 msgctxt "#32625"
-msgid "Skipping cleaning..."
+msgid "Skipping cleaning."
 msgstr ""
 
 msgctxt "#32626"
@@ -412,5 +420,5 @@ msgid "music videos"
 msgstr ""
 
 msgctxt "#32628"
-msgid "TV shows"
+msgid "episodes"
 msgstr ""
