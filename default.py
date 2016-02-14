@@ -89,7 +89,7 @@ class Cleaner(object):
         if self.silent:
             return False
         elif self.progress.iscanceled():
-            debug("User canceled, aborting. You may have leftover files.", xbmc.LOGWARNING)
+            debug("User canceled.", xbmc.LOGWARNING)
             self.exit_status = self.STATUS_ABORTED
             return True
 
@@ -124,7 +124,7 @@ class Cleaner(object):
 
         if not self.silent:
             # self.progress.create(__title__, translate(32618).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
-            self.progress.update(0, "[B]Cleaning {0}[/B]".format(type_translation[video_type]), " ", " ")
+            self.progress.update(0, "[B]Cleaning {0}[/B]".format(type_translation[video_type]), " ", " ")  # TODO: Localize this
             xbmc.sleep(1000)
 
         if video_type == self.TVSHOWS:
@@ -151,54 +151,55 @@ class Cleaner(object):
                     xbmc.sleep(2500)
 
             for filename, title in expired_videos:
-                unstacked_path = self.unstack(filename)
-                if xbmcvfs.exists(unstacked_path[0]):
-                    if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
-                        # No destination set, prompt user to set one now
-                        if get_setting(holding_folder) == "":
-                            if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
-                                xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
-                            self.exit_status = self.STATUS_ABORTED
-                            break
-                        if get_setting(create_subdirs):
-                            if isinstance(title, unicode):
-                                title = title.encode("utf-8")
-                            new_path = os.path.join(get_setting(holding_folder), str(title))
-                        else:
-                            new_path = get_setting(holding_folder)
-                        move_result = self.move_file(filename, new_path)
-                        if move_result == 1:
-                            debug("File(s) moved successfully.")
-                            count += 1
-                            if len(unstacked_path) > 1:
-                                cleaned_files.extend(unstacked_path)
+                if not self.__is_canceled():
+                    unstacked_path = self.unstack(filename)
+                    if xbmcvfs.exists(unstacked_path[0]):
+                        if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
+                            # No destination set, prompt user to set one now
+                            if get_setting(holding_folder) == "":
+                                if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
+                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
+                                self.exit_status = self.STATUS_ABORTED
+                                break
+                            if get_setting(create_subdirs):
+                                if isinstance(title, unicode):
+                                    title = title.encode("utf-8")
+                                new_path = os.path.join(get_setting(holding_folder), str(title))
                             else:
-                                cleaned_files.append(filename)
-                            self.clean_related_files(filename, new_path)
-                            self.delete_empty_folders(os.path.dirname(filename))
-                        elif move_result == -1:
-                            debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
-                            xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
-                    elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
-                        if self.delete_file(filename):
-                            debug("File(s) deleted successfully.")
-                            count += 1
-                            if len(unstacked_path) > 1:
-                                cleaned_files.extend(unstacked_path)
-                            else:
-                                cleaned_files.append(filename)
-                            self.clean_related_files(filename)
-                            self.delete_empty_folders(os.path.dirname(filename))
-                else:
-                    debug("{0!r} was already deleted. Skipping.".format(filename), xbmc.LOGWARNING)
+                                new_path = get_setting(holding_folder)
+                            move_result = self.move_file(filename, new_path)
+                            if move_result == 1:
+                                debug("File(s) moved successfully.")
+                                count += 1
+                                if len(unstacked_path) > 1:
+                                    cleaned_files.extend(unstacked_path)
+                                else:
+                                    cleaned_files.append(filename)
+                                self.clean_related_files(filename, new_path)
+                                self.delete_empty_folders(os.path.dirname(filename))
+                            elif move_result == -1:
+                                debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
+                                xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
+                        elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
+                            if self.delete_file(filename):
+                                debug("File(s) deleted successfully.")
+                                count += 1
+                                if len(unstacked_path) > 1:
+                                    cleaned_files.extend(unstacked_path)
+                                else:
+                                    cleaned_files.append(filename)
+                                self.clean_related_files(filename)
+                                self.delete_empty_folders(os.path.dirname(filename))
+                    else:
+                        debug("{0!r} was already deleted. Skipping.".format(filename), xbmc.LOGWARNING)
 
-                if not self.silent:
-                    progress_percent += increment * 100
-                    debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
-                    self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0!s}[/I]".format(title))
-                    if self.__is_canceled():
-                        break
-                    xbmc.sleep(2000)
+                    if not self.silent:
+                        progress_percent += increment * 100
+                        debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
+                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0!s}[/I]".format(title))
+                        xbmc.sleep(2000)
+                else:
+                    debug("We had {amt!s} {type!s} left to clean.".format(amt=(amount - count), type=type_translation[video_type]))
         else:
             debug("Cleaning of {0!r} is disabled. Skipping.".format(video_type))
             if not self.silent:
