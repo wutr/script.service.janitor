@@ -422,3 +422,7 @@ msgstr ""
 msgctxt "#32628"
 msgid "episodes"
 msgstr ""
+
+msgctxt "#32629"
+msgid "[B]Cleaning {type}[/B]"
+msgstr ""

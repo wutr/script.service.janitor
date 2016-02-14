@@ -421,3 +421,7 @@ msgstr "videoclips"
 msgctxt "#32628"
 msgid "episodes"
 msgstr "afleveringen"
+
+msgctxt "#32629"
+msgid "[B]Cleaning {type}[/B]"
+msgstr "[B]{type} opschonen[/B]"

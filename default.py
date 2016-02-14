@@ -83,8 +83,10 @@ class Cleaner(object):
 
     def __is_canceled(self):
         """
-
-        :return:
+        Test if the progress dialog has been canceled by the user. If the cleaner was started as a service this will
+        always return False
+        :rtype: bool
+        :return: True if the user cancelled cleaning, False otherwise.
         """
         if self.silent:
             return False
@@ -95,15 +97,13 @@ class Cleaner(object):
 
     def show_progress(self):
         """
-
-        :return:
+        Toggle the progress dialog on. Use before calling the cleaning method.
         """
         self.silent = False
 
     def hide_progress(self):
         """
-
-        :return:
+        Toggle the progress dialog off. Use before calling the cleaning method.
         """
         self.silent = True
 
@@ -113,8 +113,6 @@ class Cleaner(object):
 
         :type video_type: str
         :param video_type: The type of videos to clean (one of TVSHOWS, MOVIES, MUSIC_VIDEOS).
-        :type silent: bool
-        :param silent: Whether or not to show a progress dialog during cleaning.
         :rtype: (list, int, int)
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
@@ -123,8 +121,8 @@ class Cleaner(object):
         type_translation = {self.MOVIES: translate(32626), self.MUSIC_VIDEOS: translate(32627), self.TVSHOWS: translate(32628)}
 
         if not self.silent:
-            # self.progress.create(__title__, translate(32618).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
-            self.progress.update(0, "[B]Cleaning {0}[/B]".format(type_translation[video_type]), " ", " ")  # TODO: Localize this
+            # Cleaning <video type>
+            self.progress.update(0, translate(32629).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
             xbmc.sleep(1000)
 
         if video_type == self.TVSHOWS:
@@ -212,8 +210,6 @@ class Cleaner(object):
         """
         Clean up any watched videos in the Kodi library, satisfying any conditions set via the addon settings.
 
-        :param silent: Whether to run silently (i.e. hide the progress dialog) (defaults to True)
-        :type silent: bool
         :rtype: (str, int)
         :return: A single-line (localized) summary of the cleaning results to be used for a notification, plus a status.
         """
