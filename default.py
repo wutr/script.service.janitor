@@ -231,10 +231,11 @@ class Cleaner(object):
                 self.progress.update(0)
                 xbmc.sleep(2000)
             for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
-                cleaned_files, count, status = self.clean(video_type)
-                if count > 0:
-                    cleaning_results.extend(cleaned_files)
-                    results[video_type] = count
+                if not self.__is_canceled():
+                    cleaned_files, count, status = self.clean(video_type)
+                    if count > 0:
+                        cleaning_results.extend(cleaned_files)
+                        results[video_type] = count
             if not self.silent:
                 self.progress.close()
 
