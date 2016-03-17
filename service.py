@@ -39,7 +39,7 @@ def autostart():
         else:
             xbmc.sleep(service_sleep * 1000)
 
-    print("Abort requested. Terminating.")
+    xbmc.log("Abort requested. Terminating.")
     return
 
 

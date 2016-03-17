@@ -89,6 +89,5 @@ def load_all():
     """
     settings = dict()
     for s in bools + strings + numbers + paths:
-        print s
         settings[s] = get_setting(s)
     return settings
