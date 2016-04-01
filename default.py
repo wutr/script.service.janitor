@@ -8,11 +8,11 @@ from utils import *
 
 
 # Addon info
-__addonID__ = "script.filecleaner"
-__addon__ = Addon(__addonID__)
-__title__ = xbmc.translatePath(__addon__.getAddonInfo("name")).decode("utf-8")
-__author__ = "Anthirian, drewzh"
-__icon__ = xbmc.translatePath(__addon__.getAddonInfo("icon")).decode("utf-8")
+ADDON_ID = "script.filecleaner"
+ADDON = Addon(ADDON_ID)
+ADDON_NAME = xbmc.translatePath(ADDON.getAddonInfo("name")).decode("utf-8")
+ADDON_AUTHOR = "Anthirian, drewzh"
+ADDON_ICON = xbmc.translatePath(ADDON.getAddonInfo("icon")).decode("utf-8")
 
 
 class Cleaner(object):
@@ -78,8 +78,8 @@ class Cleaner(object):
     exit_status = STATUS_SUCCESS
 
     def __init__(self):
-        debug("{0!s} version {1!s} loaded.".format(__addon__.getAddonInfo("name").decode("utf-8"),
-                                                   __addon__.getAddonInfo("version").decode("utf-8")))
+        debug("{0!s} version {1!s} loaded.".format(ADDON.getAddonInfo("name").decode("utf-8"),
+                                                   ADDON.getAddonInfo("version").decode("utf-8")))
 
     def __is_canceled(self):
         """
@@ -156,8 +156,8 @@ class Cleaner(object):
                         if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
-                                if xbmcgui.Dialog().yesno(__title__, *map(translate, (32521, 32522, 32523))):
-                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(__addonID__))
+                                if xbmcgui.Dialog().yesno(ADDON_NAME, *map(translate, (32521, 32522, 32523))):
+                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(ADDON_ID))
                                 self.exit_status = self.STATUS_ABORTED
                                 break
                             if get_setting(create_subdirs):
@@ -225,7 +225,7 @@ class Cleaner(object):
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and
                                                           utils.disk_space_low()):
             if not self.silent:
-                self.progress.create(__title__, *map(translate, (32619, 32615, 32615)))
+                self.progress.create(ADDON_NAME, *map(translate, (32619, 32615, 32615)))
                 self.progress.update(0)
                 monitor.waitForAbort(2)
             for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
@@ -706,4 +706,4 @@ if __name__ == "__main__":
             # Do not show cleaning results in case user aborted, e.g. to set holding folder
             pass
         else:
-            xbmcgui.Dialog().ok(__title__, utils.translate(32520))
+            xbmcgui.Dialog().ok(ADDON_NAME, utils.translate(32520))
