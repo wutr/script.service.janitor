@@ -34,10 +34,10 @@ def autostart():
                 notify(results)
                 ticker = 0
 
-            xbmc.sleep(service_sleep * 1000)
+            monitor.waitForAbort(service_sleep)
             ticker += 1
         else:
-            xbmc.sleep(service_sleep * 1000)
+            monitor.waitForAbort(service_sleep)
 
     xbmc.log("Abort requested. Terminating.")
     return
