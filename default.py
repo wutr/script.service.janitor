@@ -74,6 +74,7 @@ class Cleaner(object):
     stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
 
     progress = xbmcgui.DialogProgress()
+    monitor = xbmc.Monitor()
     silent = True
     exit_status = STATUS_SUCCESS
 
@@ -123,7 +124,7 @@ class Cleaner(object):
         if not self.silent:
             # Cleaning <video type>
             self.progress.update(0, translate(32629).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
-            monitor.waitForAbort(1)
+            self.monitor.waitForAbort(1)
 
         if video_type == self.TVSHOWS:
             clean_this_video_type = get_setting(clean_tv_shows)
@@ -146,7 +147,7 @@ class Cleaner(object):
                     increment = 1.0 / amount
                 except ZeroDivisionError:
                     self.progress.update(0, *map(translate, (32621, 32622, 32623)))  # No watched videos found
-                    if monitor.waitForAbort(2.5):
+                    if self.monitor.waitForAbort(2.5):
                         pass
 
             for filename, title in expired_videos:
@@ -198,14 +199,14 @@ class Cleaner(object):
                         if isinstance(title, unicode):
                             title = title.encode("utf-8")
                         self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0!s}[/I]".format(title))
-                        monitor.waitForAbort(2)
+                        self.monitor.waitForAbort(2)
                 else:
                     debug("We had {amt!s} {type!s} left to clean.".format(amt=(amount - count), type=type_translation[video_type]))
         else:
             debug("Cleaning of {0!r} is disabled. Skipping.".format(video_type))
             if not self.silent:
                 self.progress.update(0, translate(32624).format(type=type_translation[video_type]), *map(translate, (32625, 32615)))
-                monitor.waitForAbort(2)
+                self.monitor.waitForAbort(2)
 
         return cleaned_files, count, self.exit_status
 
@@ -229,7 +230,7 @@ class Cleaner(object):
             if not self.silent:
                 self.progress.create(ADDON_NAME, *map(translate, (32619, 32615, 32615)))
                 self.progress.update(0)
-                monitor.waitForAbort(2)
+                self.monitor.waitForAbort(2)
             for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
                 if not self.__is_canceled():
                     cleaned_files, count, status = self.clean(video_type)
@@ -246,7 +247,7 @@ class Cleaner(object):
 
             # Finally clean the library to account for any deleted videos.
             if get_setting(clean_kodi_library):
-                monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
+                self.monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
 
                 if xbmc.getCondVisibility("Library.IsScanningVideo"):
                     debug("The video library is being updated. Skipping library cleanup.", xbmc.LOGWARNING)
@@ -693,7 +694,6 @@ class Cleaner(object):
 
 if __name__ == "__main__":
     cleaner = Cleaner()
-    monitor = xbmc.Monitor()
     if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
         xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
     else:
