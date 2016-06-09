@@ -623,9 +623,13 @@ class Cleaner(object):
     def has_no_hard_links(self, filename):
         """
         Tests the provided filename for hard links and only returns True if the number of hard links is exactly 1.
+
         :param filename: The filename to check for hard links
+        :type filename: str
         :return: True if the number of hard links equals 1, False otherwise.
+        :rtype: bool
         """
+        debug("Making sure the number of hard links is exactly one", xbmc.LOGDEBUG)
         return all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
 
 
