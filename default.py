@@ -626,7 +626,7 @@ class Cleaner(object):
         :param filename: The filename to check for hard links
         :return: True if the number of hard links equals 1, False otherwise.
         """
-        return all(i == 1 for i in map(xbmcvfs.Stat.n_links, map(xbmcvfs.Stat, self.unstack(filename))))
+        return all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
 
 
 if __name__ == "__main__":
