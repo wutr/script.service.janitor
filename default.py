@@ -151,7 +151,7 @@ class Cleaner(object):
             for filename, title in expired_videos:
                 if not self.__is_canceled():
                     unstacked_path = self.unstack(filename)
-                    if xbmcvfs.exists(unstacked_path[0]):
+                    if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
                         if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
@@ -619,6 +619,15 @@ class Cleaner(object):
                 debug("File {0!r} is no longer available.".format(p), xbmc.LOGWARNING)
 
         return 1 if len(paths) == files_moved_successfully else -1
+
+    def has_no_hard_links(self, filename):
+        """
+        Tests the provided filename for hard links and only returns True if the number of hard links is exactly 1.
+        :param filename: The filename to check for hard links
+        :return: True if the number of hard links equals 1, False otherwise.
+        """
+        return all(i == 1 for i in map(xbmcvfs.Stat.n_links, map(xbmcvfs.Stat, self.unstack(filename))))
+
 
 if __name__ == "__main__":
     cleaner = Cleaner()
