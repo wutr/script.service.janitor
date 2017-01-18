@@ -191,6 +191,9 @@ msgctxt "#32312"
 msgid "[I]Note that music videos cannot be partially played and will ignore this [/I]"
 msgstr ""
 
+msgctxt "#32313"
+msgid "Do not clean videos that have hard links (e.g. seeding torrents)"
+msgstr ""
 
 # Exclusions section
 # ==================

@@ -189,7 +189,7 @@ class Cleaner(object):
                                 self.clean_related_files(filename)
                                 self.delete_empty_folders(os.path.dirname(filename))
                     else:
-                        debug("{0!r} was already deleted. Skipping.".format(filename), xbmc.LOGWARNING)
+                        debug("Not cleaning {0!r}.".format(filename), xbmc.LOGNOTICE)
 
                     if not self.silent:
                         progress_percent += increment * 100
@@ -629,8 +629,13 @@ class Cleaner(object):
         :return: True if the number of hard links equals 1, False otherwise.
         :rtype: bool
         """
-        debug("Making sure the number of hard links is exactly one", xbmc.LOGDEBUG)
-        return all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
+        if get_setting(keep_hard_linked):
+            debug("Making sure the number of hard links is exactly one.", xbmc.LOGDEBUG)
+            is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
+            debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.", xbmc.LOGDEBUG)
+        else:
+            debug("Not checking for hard links.", xbmc.LOGDEBUG)
+            return True
 
 
 if __name__ == "__main__":

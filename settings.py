@@ -42,6 +42,8 @@ create_subdirs = "create_subdirs"
 
 not_in_progress = "not_in_progress"
 
+keep_hard_linked = "keep_hard_linked"
+
 exclusion_enabled = "exclusion_enabled"
 exclusion1 = "exclusion1"
 exclusion2 = "exclusion2"
@@ -50,7 +52,7 @@ exclusion3 = "exclusion3"
 bools = [service_enabled, delete_folders, clean_related, notifications_enabled, notify_when_idle, debugging_enabled,
          clean_kodi_library, clean_movies, clean_tv_shows, clean_music_videos, clean_when_idle, enable_expiration,
          clean_when_low_rated, ignore_no_rating, clean_when_low_disk_space, create_subdirs,
-         not_in_progress, exclusion_enabled]
+         not_in_progress, keep_hard_linked, exclusion_enabled]
 strings = [ignore_extensions, cleaning_type, default_action]
 numbers = [delayed_start, scan_interval, expire_after, minimum_rating, disk_space_threshold]
 paths = [disk_space_check_path, holding_folder, create_subdirs, exclusion1, exclusion2, exclusion3]

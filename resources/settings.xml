@@ -56,6 +56,8 @@
 
         <setting label="32311" id="not_in_progress" type="bool" default="true" visible="true" />
         <setting label="32312" id="musicvideo_progress_info" type="lsep" subsetting="true" visible="eq(-1,true)" />
+
+        <setting label="32313" id="keep_hard_linked" type="bool" default="false" visible="true" />
     </category>
 
     <!-- Exclusions section -->
