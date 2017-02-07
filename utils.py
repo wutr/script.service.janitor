@@ -12,7 +12,7 @@ from settings import *
 
 
 # Addon info
-__addonID__ = "script.filecleaner"
+__addonID__ = "script.service.janitor"
 __addon__ = Addon(__addonID__)
 __title__ = __addon__.getAddonInfo("name")
 __profile__ = xbmc.translatePath(__addon__.getAddonInfo("profile")).decode("utf-8")
@@ -238,7 +238,7 @@ def translate(msg_id):
         return ""
 
 
-def notify(message, duration=5000, image=__icon__, level=xbmc.LOGNOTICE, sound=True):
+def notify(message, duration=5000, image=__icon__, level=xbmc.LOGDEBUG, sound=True):
     """
     Display a Kodi notification and log the message.
 

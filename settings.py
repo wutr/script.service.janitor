@@ -71,13 +71,13 @@ def get_setting(setting):
     :return: The value corresponding to the provided setting. This can be a float, a bool, a string or None.
     """
     if setting in bools:
-        return bool(Addon("script.filecleaner").getSetting(setting) == "true")
+        return bool(Addon(utils.__addonID__).getSetting(setting) == "true")
     elif setting in numbers:
-        return float(Addon("script.filecleaner").getSetting(setting))
+        return float(Addon(utils.__addonID__).getSetting(setting))
     elif setting in strings:
-        return str(Addon("script.filecleaner").getSetting(setting))
+        return str(Addon(utils.__addonID__).getSetting(setting))
     elif setting in paths:
-        return xbmc.translatePath(Addon("script.filecleaner").getSetting(setting).encode("utf-8"))
+        return xbmc.translatePath(Addon(utils.__addonID__).getSetting(setting).encode("utf-8"))
     else:
         utils.debug("Failed loading {0!r} value. Type {1!r} cannot be handled.".format(setting, type(setting)), xbmc.LOGWARNING)
         return None

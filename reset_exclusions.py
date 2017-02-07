@@ -6,8 +6,7 @@ import xbmcgui
 import utils
 
 # Addon info
-__addonID__ = "script.filecleaner"
-__addon__ = xbmcaddon.Addon(__addonID__)
+__addon__ = xbmcaddon.Addon(utils.__addonID__)
 
 
 def reset_exclusions():

@@ -7,8 +7,7 @@ from utils import *
 from viewer import *
 
 # Addon info
-ADDON_ID = "script.filecleaner"
-ADDON = Addon(ADDON_ID)
+ADDON = Addon(utils.__addonID__)
 ADDON_NAME = xbmc.translatePath(ADDON.getAddonInfo("name")).decode("utf-8")
 ADDON_AUTHOR = "Anthirian, drewzh"
 ADDON_ICON = xbmc.translatePath(ADDON.getAddonInfo("icon")).decode("utf-8")
@@ -157,7 +156,7 @@ class Cleaner(object):
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
                                 if xbmcgui.Dialog().yesno(ADDON_NAME, *map(translate, (32521, 32522, 32523))):
-                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(ADDON_ID))
+                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(utils.__addonID__))
                                 self.exit_status = self.STATUS_ABORTED
                                 break
                             if get_setting(create_subdirs):

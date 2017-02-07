@@ -8,8 +8,7 @@ import utils
 
 
 # Addon info
-__addonID__ = "script.filecleaner"
-__addon__ = Addon(__addonID__)
+__addon__ = Addon(utils.__addonID__)
 __title__ = __addon__.getAddonInfo("name")
 __profile__ = xbmc.translatePath(__addon__.getAddonInfo("profile")).decode("utf-8")
 
