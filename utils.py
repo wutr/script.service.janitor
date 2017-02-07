@@ -259,7 +259,7 @@ def notify(message, duration=5000, image=__icon__, level=xbmc.LOGNOTICE, sound=T
             xbmcgui.Dialog().notification(__title__, message, image, duration, sound)
 
 
-def debug(message, level=xbmc.LOGNOTICE):
+def debug(message, level=xbmc.LOGDEBUG):
     """
     Write a debug message to xbmc.log
 
