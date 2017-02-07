@@ -48,6 +48,8 @@ exclusion_enabled = "exclusion_enabled"
 exclusion1 = "exclusion1"
 exclusion2 = "exclusion2"
 exclusion3 = "exclusion3"
+exclusion4 = "exclusion4"
+exclusion5 = "exclusion5"
 
 bools = [service_enabled, delete_folders, clean_related, notifications_enabled, notify_when_idle, debugging_enabled,
          clean_kodi_library, clean_movies, clean_tv_shows, clean_music_videos, clean_when_idle, enable_expiration,
@@ -55,7 +57,8 @@ bools = [service_enabled, delete_folders, clean_related, notifications_enabled, 
          not_in_progress, keep_hard_linked, exclusion_enabled]
 strings = [ignore_extensions, cleaning_type, default_action]
 numbers = [delayed_start, scan_interval, expire_after, minimum_rating, disk_space_threshold]
-paths = [disk_space_check_path, holding_folder, create_subdirs, exclusion1, exclusion2, exclusion3]
+paths = [disk_space_check_path, holding_folder, create_subdirs, exclusion1, exclusion2, exclusion3, exclusion4,
+         exclusion5]
 
 
 def get_setting(setting):
@@ -76,7 +79,7 @@ def get_setting(setting):
     elif setting in paths:
         return xbmc.translatePath(Addon("script.filecleaner").getSetting(setting).encode("utf-8"))
     else:
-        utils.debug("Failed loading %r value. Type %r cannot be handled." % (setting, type(setting)), xbmc.LOGWARNING)
+        utils.debug("Failed loading {0!r} value. Type {1!r} cannot be handled.".format(setting, type(setting)), xbmc.LOGWARNING)
         return None
 
 

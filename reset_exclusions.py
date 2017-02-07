@@ -19,5 +19,7 @@ def reset_exclusions():
         __addon__.setSetting(id="exclusion1", value="")
         __addon__.setSetting(id="exclusion2", value="")
         __addon__.setSetting(id="exclusion3", value="")
+        __addon__.setSetting(id="exclusion4", value="")
+        __addon__.setSetting(id="exclusion5", value="")
 
 reset_exclusions()
