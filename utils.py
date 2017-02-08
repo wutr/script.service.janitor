@@ -43,7 +43,7 @@ class Log(object):
             f = open(self.logpath, "a+")  # use append mode to make sure it is created if non-existent
             previous_data = f.read()
         except (IOError, OSError) as err:
-            debug("%s" % err, xbmc.LOGERROR)
+            debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
             f.close()
 
@@ -51,11 +51,11 @@ class Log(object):
                 debug("Writing new log data.")
                 f = open(self.logpath, "w")
                 if data:
-                    f.write("[B][%s][/B]\n" % time.strftime("%d/%m/%Y  -  %H:%M:%S"))
+                    f.write("[B][{0!s}][/B]\n".format(time.strftime("%d/%m/%Y  -  %H:%M:%S")))
                     for line in data:
                         if isinstance(line, unicode):
                             line = line.encode("utf-8")
-                        f.write(" - %s\n" % line)
+                        f.write(" - {0!s}\n".format(line))
                     f.write("\n")
                     debug("New data written to log file.")
                 else:
@@ -80,12 +80,12 @@ class Log(object):
         try:
             debug("Trimming log file contents.")
             f = open(self.logpath, "r")
-            debug("Saving the top %d lines." % lines_to_keep)
+            debug("Saving the top {0!d} lines.".format(lines_to_keep))
             lines = []
             for i in xrange(lines_to_keep):
                 lines.append(f.readline())
         except (IOError, OSError) as err:
-            debug("%s" % err, xbmc.LOGERROR)
+            debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
             f.close()
 
@@ -95,7 +95,7 @@ class Log(object):
                 debug("Restoring saved log contents.")
                 f.writelines(lines)
             except (IOError, OSError) as err:
-                debug("%s" % err, xbmc.LOGERROR)
+                debug("{0!s}".format(err, xbmc.LOGERROR))
             else:
                 f.close()
                 return self.get()
@@ -112,7 +112,7 @@ class Log(object):
             f = open(self.logpath, "r+")
             f.truncate()
         except (IOError, OSError) as err:
-            debug("%s" % err, xbmc.LOGERROR)
+            debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
             f.close()
             return self.get()
@@ -128,7 +128,7 @@ class Log(object):
             debug("Retrieving log file contents.")
             f = open(self.logpath, "a+")
         except (IOError, OSError) as err:
-            debug("%s" % err, xbmc.LOGERROR)
+            debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
             contents = f.read()
             f.close()
@@ -144,30 +144,30 @@ def get_free_disk_space(path):
     :return: The percentage of free space on the disk; 100% if errors occur.
     """
     percentage = float(100)
-    debug("Checking for disk space on path: %r" % path)
+    debug("Checking for disk space on path: {0!r}".format(path))
     if xbmcvfs.exists(path):
         if xbmc.getCondVisibility("System.Platform.Windows"):
             debug("We are checking disk space from a Windows file system")
-            debug("The path to check is %r" % path)
+            debug("The path to check is {0!r}".format(path))
 
             if r"://" in path:
                 debug("We are dealing with network paths")
-                debug("Extracting information from share %r" % path)
+                debug("Extracting information from share {0!r}".format(path))
 
                 regex = "(?P<type>smb|nfs|afp)://(?:(?P<user>.+):(?P<pass>.+)@)?(?P<host>.+?)/(?P<share>.+?).*$"
                 pattern = re.compile(regex, flags=re.I | re.U)
                 match = pattern.match(path)
                 try:
                     share = match.groupdict()
-                    debug("Protocol: %r, User: %r, Password: %r, Host: %r, Share: %r" %
-                          (share["type"], share["user"], share["pass"], share["host"], share["share"]))
+                    debug("Protocol: {0!r}, User: {1!r}, Password: {2!r}, Host: {3!r}, Share: {4!r}".format(
+                        share["type"], share["user"], share["pass"], share["host"], share["share"]))
                 except AttributeError as ae:
-                    debug("%r\nCould not extract required data from %r" % (ae, path), xbmc.LOGERROR)
+                    debug("{0!r}\nCould not extract required data from {1!r}".format(ae, path), xbmc.LOGERROR)
                     return percentage
 
                 debug("Creating UNC paths so Windows understands the shares")
                 path = os.path.normcase(r"\\" + share["host"] + os.sep + share["share"])
-                debug("UNC path: %r" % path)
+                debug("UNC path: {0!r}".format(path))
                 debug("If checks fail because you need credentials, please mount the share first")
             else:
                 debug("We are dealing with local paths")
@@ -175,7 +175,7 @@ def get_free_disk_space(path):
             if not isinstance(path, unicode):
                 debug("Converting path to unicode for disk space checks")
                 path = path.decode("mbcs")
-                debug("New path: %r" % path)
+                debug("New path: {0!r}".format(path))
 
             bytes_total = c_ulonglong(0)
             bytes_free = c_ulonglong(0)
@@ -184,33 +184,33 @@ def get_free_disk_space(path):
             try:
                 percentage = float(bytes_free.value) / float(bytes_total.value) * 100
                 debug("Hard disk check results:")
-                debug("Bytes free: %s" % bytes_free.value)
-                debug("Bytes total: %s" % bytes_total.value)
+                debug("Bytes free: {0!s}".format(bytes_free.value))
+                debug("Bytes total: {0!s}".format(bytes_total.value))
             except ZeroDivisionError:
                 notify(translate(32511), 15000, level=xbmc.LOGERROR)
         else:
             debug("We are checking disk space from a non-Windows file system")
-            debug("Stripping %r of all redundant stuff." % path)
+            debug("Stripping {0!r} of all redundant stuff.".format(path))
             path = os.path.normpath(path)
-            debug("The path now is " + path)
+            debug("The path now is {0!r}".format(path))
 
             try:
                 diskstats = os.statvfs(path)
                 percentage = float(diskstats.f_bfree) / float(diskstats.f_blocks) * 100
                 debug("Hard disk check results:")
-                debug("Bytes free: %r" % diskstats.f_bfree)
-                debug("Bytes total: %r" % diskstats.f_blocks)
+                debug("Bytes free: {0!r}".format(diskstats.f_bfree))
+                debug("Bytes total: {0!r}".format(diskstats.f_blocks))
             except OSError as ose:
                 # TODO: Linux cannot check remote share disk space yet
                 # notify(translate(32512), 15000, level=xbmc.LOGERROR)
                 notify(translate(32524), 15000, level=xbmc.LOGERROR)
-                debug("Error accessing %r: %r" % (path, ose))
+                debug("Error accessing {0!r}: {1!r}".format(path, ose))
             except ZeroDivisionError:
                 notify(translate(32511), 15000, level=xbmc.LOGERROR)
     else:
         notify(translate(32513), 15000, level=xbmc.LOGERROR)
 
-    debug("Free space: %0.2f%%" % percentage)
+    debug("Free space: {0:.2f}%".format(percentage))
     return percentage
 
 
@@ -272,4 +272,4 @@ def debug(message, level=xbmc.LOGDEBUG):
         if isinstance(message, unicode):
             message = message.encode("utf-8")
         for line in message.splitlines():
-            xbmc.log(msg=__title__ + ": " + line, level=level)
+            xbmc.log(msg="{0!s}: {1!s}".format(__title__, line), level=level)

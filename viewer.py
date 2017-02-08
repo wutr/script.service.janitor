@@ -35,6 +35,8 @@ class LogViewerDialog(xbmcgui.WindowXMLDialog):
     def onInit(self):
         self.getControl(self.CAPTIONID).setLabel(self.caption)
         self.getControl(self.TEXTBOXID).setText(self.log.get())
+        self.getControl(self.TRIMBUTTONID).setLabel(utils.translate(32608))
+        self.getControl(self.CLEARBUTTONID).setLabel(utils.translate(32609))
 
     def onClick(self, control_id, *args):
         if control_id == self.TRIMBUTTONID:
