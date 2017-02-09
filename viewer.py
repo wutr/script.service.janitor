@@ -50,8 +50,3 @@ class LogViewerDialog(xbmcgui.WindowXMLDialog):
         else:
             utils.debug("Unknown button pressed", xbmc.LOGERROR)
 
-
-if __name__ == "__main__":
-    win = LogViewerDialog("DialogLogViewer.xml", __addon__.getAddonInfo("path"))
-    win.doModal()
-    del win

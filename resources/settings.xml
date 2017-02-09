@@ -92,6 +92,6 @@
         <setting type="sep" />
         <setting label="32601" type="lsep" />
         <setting type="sep" />
-        <setting label="32602" type="action" action="RunScript(special://home/addons/script.filecleaner/viewer.py)" />
+        <setting label="32602" type="action" action="RunScript(script.service.janitor, log)" />
     </category>
 </settings>

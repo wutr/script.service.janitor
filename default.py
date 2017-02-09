@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import json
+import sys
 from utils import *
-
+from viewer import *
 
 # Addon info
 ADDON_ID = "script.filecleaner"
@@ -357,7 +358,7 @@ class Cleaner(object):
         response = result["result"]
         try:
             debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
-            debug("JSON Response: " + str(response))
+            debug("JSON Response: {0!s}".format(response))
             for video in response[option]:
                 # Gather all properties and add it to this video's information
                 temp = []
@@ -480,18 +481,18 @@ class Cleaner(object):
             try:
                 # Recursively delete any subfolders
                 for f in subfolders:
-                    debug("Deleting file at " + str(os.path.join(folder, f)))
+                    debug("Deleting file at {0!s}".format(os.path.join(folder, f)))
                     self.delete_empty_folders(os.path.join(folder, f))
 
                 # Delete any files in the current folder
                 for f in files:
-                    debug("Deleting file at " + str(os.path.join(folder, f)))
+                    debug("Deleting file at {0!s}".format(os.path.join(folder, f)))
                     xbmcvfs.delete(os.path.join(folder, f))
 
                 # Finally delete the current folder
                 return xbmcvfs.rmdir(folder)
             except OSError as oe:
-                debug("An exception occurred while deleting folders. Errno " + str(oe.errno), xbmc.LOGERROR)
+                debug("An exception occurred while deleting folders. Errno {0!s}".format(oe.errno), xbmc.LOGERROR)
                 return False
         else:
             debug("Directory is not empty and will not be removed")
@@ -630,28 +631,33 @@ class Cleaner(object):
         :rtype: bool
         """
         if get_setting(keep_hard_linked):
-            debug("Making sure the number of hard links is exactly one.", xbmc.LOGDEBUG)
+            debug("Making sure the number of hard links is exactly one.")
             is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
-            debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.", xbmc.LOGDEBUG)
+            debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
         else:
-            debug("Not checking for hard links.", xbmc.LOGDEBUG)
+            debug("Not checking for hard links.")
             return True
 
 
 if __name__ == "__main__":
-    cleaner = Cleaner()
-    if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
-        xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
+    if len(sys.argv) > 1 and sys.argv[1] == "log":
+        win = LogViewerDialog("DialogLogViewer.xml", ADDON.getAddonInfo("path"))
+        win.doModal()
+        del win
     else:
-        cleaner.show_progress()
-        results, return_status = cleaner.clean_all()
-        if results:
-            # Videos were cleaned. Ask the user to view the log file.
-            # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
-            if xbmcgui.Dialog().yesno(utils.translate(32514), results, utils.translate(32519)):
-                xbmc.executescript("special://home/addons/script.filecleaner/viewer.py")
-        elif return_status == cleaner.STATUS_ABORTED:
-            # Do not show cleaning results in case user aborted, e.g. to set holding folder
-            pass
+        cleaner = Cleaner()
+        if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
+            xbmc.executebuiltin("RunScript({0!s}, log)".format(utils.__addonID__))
         else:
-            xbmcgui.Dialog().ok(ADDON_NAME, utils.translate(32520))
+            cleaner.show_progress()
+            results, return_status = cleaner.clean_all()
+            if results:
+                # Videos were cleaned. Ask the user to view the log file.
+                # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
+                if xbmcgui.Dialog().yesno(utils.translate(32514), results, utils.translate(32519)):
+                    xbmc.executebuiltin("RunScript({0!s}, log)".format(utils.__addonID__))
+            elif return_status == cleaner.STATUS_ABORTED:
+                # Do not show cleaning results in case user aborted, e.g. to set holding folder
+                pass
+            else:
+                xbmcgui.Dialog().ok(ADDON_NAME, utils.translate(32520))
