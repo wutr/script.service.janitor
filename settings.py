@@ -1,9 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import xbmc
 import utils
-from xbmcaddon import Addon
+from xbmc import translatePath
 
 # Exhaustive list of constants as used by the addon's settings
 service_enabled = "service_enabled"
@@ -71,16 +70,15 @@ def get_setting(setting):
     :return: The value corresponding to the provided setting. This can be a float, a bool, a string or None.
     """
     if setting in bools:
-        return bool(Addon(utils.__addonID__).getSetting(setting) == "true")
+        return bool(utils.ADDON.getSetting(setting) == "true")
     elif setting in numbers:
-        return float(Addon(utils.__addonID__).getSetting(setting))
+        return float(utils.ADDON.getSetting(setting))
     elif setting in strings:
-        return str(Addon(utils.__addonID__).getSetting(setting))
+        return str(utils.ADDON.getSetting(setting))
     elif setting in paths:
-        return xbmc.translatePath(Addon(utils.__addonID__).getSetting(setting).encode("utf-8"))
+        return translatePath(utils.ADDON.getSetting(setting).encode("utf-8"))
     else:
-        utils.debug("Failed loading {0!r} value. Type {1!r} cannot be handled.".format(setting, type(setting)), xbmc.LOGWARNING)
-        return None
+        raise ValueError("Failed loading {0!r} value. Type {1!r} cannot be handled.".format(setting, type(setting)))
 
 
 def load_all():

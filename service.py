@@ -1,11 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from xbmc import Monitor
-
 from default import Cleaner
 from settings import *
-from utils import debug, notify
+from utils import notify
+from xbmc import log
 
 
 def autostart():
@@ -38,7 +37,7 @@ def autostart():
         else:
             cleaner.monitor.waitForAbort(service_sleep)
 
-    xbmc.log("Abort requested. Terminating.")
+    log("Abort requested. Terminating.")
     return
 
 

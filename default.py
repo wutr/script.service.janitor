@@ -3,14 +3,9 @@
 
 import json
 import sys
+
 from utils import *
 from viewer import *
-
-# Addon info
-ADDON = Addon(utils.__addonID__)
-ADDON_NAME = xbmc.translatePath(ADDON.getAddonInfo("name")).decode("utf-8")
-ADDON_AUTHOR = "Anthirian, drewzh"
-ADDON_ICON = xbmc.translatePath(ADDON.getAddonInfo("icon")).decode("utf-8")
 
 
 class Cleaner(object):
@@ -156,12 +151,12 @@ class Cleaner(object):
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
                                 if xbmcgui.Dialog().yesno(ADDON_NAME, *map(translate, (32521, 32522, 32523))):
-                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(utils.__addonID__))
+                                    xbmc.executebuiltin("Addon.OpenSettings({0!s})".format(ADDON_ID))
                                 self.exit_status = self.STATUS_ABORTED
                                 break
                             if get_setting(create_subdirs):
                                 if isinstance(title, unicode):
-                                    title = title.encode("utf-8")
+                                    title = title.encode()
                                 new_path = os.path.join(get_setting(holding_folder), str(title))
                             else:
                                 new_path = get_setting(holding_folder)
@@ -195,7 +190,7 @@ class Cleaner(object):
                         progress_percent += increment * 100
                         debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
                         if isinstance(title, unicode):
-                            title = title.encode("utf-8")
+                            title = title.encode()
                         self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0!s}[/I]".format(title))
                         self.monitor.waitForAbort(2)
                 else:
@@ -223,8 +218,7 @@ class Cleaner(object):
 
         results = {}
         cleaning_results, cleaned_files = [], []
-        if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and
-                                                          utils.disk_space_low()):
+        if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and disk_space_low()):
             if not self.silent:
                 self.progress.create(ADDON_NAME, *map(translate, (32619, 32615, 32615)))
                 self.progress.update(0)
@@ -267,18 +261,18 @@ class Cleaner(object):
         # Localize video types
         for vid_type, amount in details.items():
             if vid_type is self.MOVIES:
-                video_type = utils.translate(32515)
+                video_type = translate(32515)
             elif vid_type is self.TVSHOWS:
-                video_type = utils.translate(32516)
+                video_type = translate(32516)
             elif vid_type is self.MUSIC_VIDEOS:
-                video_type = utils.translate(32517)
+                video_type = translate(32517)
             else:
                 video_type = ""
 
             summary += "{0:d} {1}, ".format(amount, video_type)
 
         # strip the comma and space from the last iteration and add the localized suffix
-        return "{0}{1}".format(summary.rstrip(", "), utils.translate(32518)) if summary else ""
+        return "{0}{1}".format(summary.rstrip(", "), translate(32518)) if summary else ""
 
     def get_expired_videos(self, option):
         """
@@ -384,7 +378,7 @@ class Cleaner(object):
         :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
         """
         if isinstance(path, unicode):
-            path = path.encode("utf-8")
+            path = path.encode()
         if path.startswith("stack://"):
             debug("Unstacking {0!r}.".format(path))
             return path.replace("stack://", "").split(" , ")
@@ -522,11 +516,11 @@ class Cleaner(object):
             debug("Attempting to match related files in {0!r} with prefix {1!r}".format(path, name))
             for extra_file in xbmcvfs.listdir(path)[1]:
                 if isinstance(path, unicode):
-                    path = path.encode("utf-8")
+                    path = path.encode()
                 if isinstance(extra_file, unicode):
-                    extra_file = extra_file.encode("utf-8")
+                    extra_file = extra_file.encode()
                 if isinstance(name, unicode):
-                    name = name.encode("utf-8")
+                    name = name.encode()
 
                 if extra_file.startswith(name):
                     debug("{0!r} starts with {1!r}.".format(extra_file, name))
@@ -558,7 +552,7 @@ class Cleaner(object):
         :return: 1 if (all stacked) files were moved, 0 if not, -1 if errors occurred
         """
         if isinstance(source, unicode):
-            source = source.encode("utf-8")
+            source = source.encode()
 
         paths = self.unstack(source)
         files_moved_successfully = 0
@@ -646,17 +640,17 @@ if __name__ == "__main__":
     else:
         cleaner = Cleaner()
         if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
-            xbmc.executebuiltin("RunScript({0!s}, log)".format(utils.__addonID__))
+            xbmc.executebuiltin("RunScript({0!s}, log)".format(ADDON_ID))
         else:
             cleaner.show_progress()
             results, return_status = cleaner.clean_all()
             if results:
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
-                if xbmcgui.Dialog().yesno(utils.translate(32514), results, utils.translate(32519)):
-                    xbmc.executebuiltin("RunScript({0!s}, log)".format(utils.__addonID__))
+                if xbmcgui.Dialog().yesno(translate(32514), results, translate(32519)):
+                    xbmc.executebuiltin("RunScript({0!s}, log)".format(ADDON_ID))
             elif return_status == cleaner.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder
                 pass
             else:
-                xbmcgui.Dialog().ok(ADDON_NAME, utils.translate(32520))
+                xbmcgui.Dialog().ok(ADDON_NAME, translate(32520))

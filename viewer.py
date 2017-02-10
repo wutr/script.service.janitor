@@ -1,19 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import xbmc
-import xbmcgui
-from xbmcaddon import Addon
 import utils
+from xbmcgui import Dialog, WindowXMLDialog
 
 
-# Addon info
-__addon__ = Addon(utils.__addonID__)
-__title__ = __addon__.getAddonInfo("name")
-__profile__ = xbmc.translatePath(__addon__.getAddonInfo("profile")).decode("utf-8")
-
-
-class LogViewerDialog(xbmcgui.WindowXMLDialog):
+class LogViewerDialog(WindowXMLDialog):
     """
     The LogViewerDialog class is an extension of the default windows supplied with Kodi.
 
@@ -29,7 +21,7 @@ class LogViewerDialog(xbmcgui.WindowXMLDialog):
     def __init__(self, xml_filename, script_path, default_skin="Default", default_res="720p", *args, **kwargs):
         self.log = utils.Log()
         self.caption = utils.translate(32603)
-        xbmcgui.WindowXMLDialog.__init__(self)
+        WindowXMLDialog.__init__(self)
 
     def onInit(self):
         self.getControl(self.CAPTIONID).setLabel(self.caption)
@@ -39,13 +31,12 @@ class LogViewerDialog(xbmcgui.WindowXMLDialog):
 
     def onClick(self, control_id, *args):
         if control_id == self.TRIMBUTTONID:
-            if xbmcgui.Dialog().yesno(utils.translate(32604), utils.translate(32605), utils.translate(32607)):
+            if Dialog().yesno(utils.translate(32604), utils.translate(32605), utils.translate(32607)):
                 self.getControl(self.TEXTBOXID).setText(self.log.trim())
         elif control_id == self.CLEARBUTTONID:
-            if xbmcgui.Dialog().yesno(utils.translate(32604), utils.translate(32606), utils.translate(32607)):
+            if Dialog().yesno(utils.translate(32604), utils.translate(32606), utils.translate(32607)):
                 self.getControl(self.TEXTBOXID).setText(self.log.clear())
         elif control_id == self.CLOSEBUTTONID:
             self.close()
         else:
-            utils.debug("Unknown button pressed", xbmc.LOGERROR)
-
+            raise ValueError("Unknown button pressed")

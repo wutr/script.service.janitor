@@ -6,17 +6,18 @@ import re
 import time
 from ctypes import *
 
+import xbmc
+import xbmcaddon
 import xbmcgui
 import xbmcvfs
 from settings import *
 
-
 # Addon info
-__addonID__ = "script.service.janitor"
-__addon__ = Addon(__addonID__)
-__title__ = __addon__.getAddonInfo("name")
-__profile__ = xbmc.translatePath(__addon__.getAddonInfo("profile")).decode("utf-8")
-__icon__ = xbmc.translatePath(__addon__.getAddonInfo("icon")).decode("utf-8")
+ADDON_ID = "script.service.janitor"
+ADDON = xbmcaddon.Addon(ADDON_ID)
+ADDON_NAME = ADDON.getAddonInfo("name").decode("utf-8")
+ADDON_PROFILE = xbmc.translatePath(ADDON.getAddonInfo("profile")).decode("utf-8")
+ADDON_ICON = xbmc.translatePath(ADDON.getAddonInfo("icon")).decode("utf-8")
 
 
 class Log(object):
@@ -28,7 +29,7 @@ class Log(object):
     Supported operations are prepend, trim, clear and get.
     """
     def __init__(self):
-        self.logpath = os.path.join(__profile__, "cleaner.log")
+        self.logpath = os.path.join(ADDON_PROFILE, "cleaner.log")
 
     def prepend(self, data):
         """
@@ -54,7 +55,7 @@ class Log(object):
                     f.write("[B][{0!s}][/B]\n".format(time.strftime("%d/%m/%Y  -  %H:%M:%S")))
                     for line in data:
                         if isinstance(line, unicode):
-                            line = line.encode("utf-8")
+                            line = line.encode()
                         f.write(" - {0!s}\n".format(line))
                     f.write("\n")
                     debug("New data written to log file.")
@@ -79,10 +80,10 @@ class Log(object):
         """
         try:
             debug("Trimming log file contents.")
-            f = open(self.logpath, "r")
+            f = open(self.logpath)
             debug("Saving the top {0!d} lines.".format(lines_to_keep))
             lines = []
-            for i in xrange(lines_to_keep):
+            for i in range(lines_to_keep):
                 lines.append(f.readline())
         except (IOError, OSError) as err:
             debug("{0!s}".format(err, xbmc.LOGERROR))
@@ -233,12 +234,12 @@ def translate(msg_id):
     :return: The localized string. Empty if msg_id is not an integer.
     """
     if isinstance(msg_id, int):
-        return __addon__.getLocalizedString(msg_id)
+        return ADDON.getLocalizedString(msg_id)
     else:
         return ""
 
 
-def notify(message, duration=5000, image=__icon__, level=xbmc.LOGDEBUG, sound=True):
+def notify(message, duration=5000, image=ADDON_ICON, level=xbmc.LOGDEBUG, sound=True):
     """
     Display a Kodi notification and log the message.
 
@@ -256,7 +257,7 @@ def notify(message, duration=5000, image=__icon__, level=xbmc.LOGDEBUG, sound=Tr
     if message:
         debug(message, level)
         if get_setting(notifications_enabled) and not (get_setting(notify_when_idle) and xbmc.Player().isPlaying()):
-            xbmcgui.Dialog().notification(__title__, message, image, duration, sound)
+            xbmcgui.Dialog().notification(ADDON_NAME, message, image, duration, sound)
 
 
 def debug(message, level=xbmc.LOGDEBUG):
@@ -270,6 +271,6 @@ def debug(message, level=xbmc.LOGDEBUG):
     """
     if get_setting(debugging_enabled):
         if isinstance(message, unicode):
-            message = message.encode("utf-8")
+            message = message.encode()
         for line in message.splitlines():
-            xbmc.log(msg="{0!s}: {1!s}".format(__title__, line), level=level)
+            xbmc.log(msg="{0!s}: {1!s}".format(ADDON_NAME, line), level=level)

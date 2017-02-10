@@ -1,12 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import xbmcaddon
-import xbmcgui
-import utils
-
-# Addon info
-__addon__ = xbmcaddon.Addon(utils.__addonID__)
+from utils import ADDON, translate
+from xbmcgui import Dialog
 
 
 def reset_exclusions():
@@ -14,11 +10,12 @@ def reset_exclusions():
     Reset all user-set exclusion paths to blanks.
     :return:
     """
-    if xbmcgui.Dialog().yesno(utils.translate(32604), utils.translate(32610), utils.translate(32607)):
-        __addon__.setSetting(id="exclusion1", value="")
-        __addon__.setSetting(id="exclusion2", value="")
-        __addon__.setSetting(id="exclusion3", value="")
-        __addon__.setSetting(id="exclusion4", value="")
-        __addon__.setSetting(id="exclusion5", value="")
+    if Dialog().yesno(translate(32604), translate(32610), translate(32607)):
+        ADDON.setSetting(id="exclusion1", value="")
+        ADDON.setSetting(id="exclusion2", value="")
+        ADDON.setSetting(id="exclusion3", value="")
+        ADDON.setSetting(id="exclusion4", value="")
+        ADDON.setSetting(id="exclusion5", value="")
 
-reset_exclusions()
+if __name__ == "__main__":
+    reset_exclusions()
