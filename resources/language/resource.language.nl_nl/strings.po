@@ -1,7 +1,7 @@
 # XBMC Media Center language file
-# Addon Name: Kodi File Cleaner
-# Addon id: script.filecleaner
-# Addon version: 4.0.0
+# Addon Name: Janitor
+# Addon id: script.service.janitor
+# Addon version: 4.3.0
 # Addon Provider: Anthirian, drewzh
 msgid ""
 msgstr ""

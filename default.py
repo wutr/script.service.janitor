@@ -634,7 +634,7 @@ class Cleaner(object):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "log":
-        win = LogViewerDialog("DialogLogViewer.xml", ADDON.getAddonInfo("path"))
+        win = LogViewerDialog("JanitorLogViewer.xml", ADDON.getAddonInfo("path"))
         win.doModal()
         del win
     else:

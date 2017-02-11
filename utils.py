@@ -14,7 +14,7 @@ from settings import *
 
 # Addon info
 ADDON_ID = "script.service.janitor"
-ADDON = xbmcaddon.Addon(ADDON_ID)
+ADDON = xbmcaddon.Addon()
 ADDON_NAME = ADDON.getAddonInfo("name").decode("utf-8")
 ADDON_PROFILE = xbmc.translatePath(ADDON.getAddonInfo("profile")).decode("utf-8")
 ADDON_ICON = xbmc.translatePath(ADDON.getAddonInfo("icon")).decode("utf-8")
@@ -41,33 +41,29 @@ class Log(object):
         try:
             debug("Prepending the log file with new data.")
             debug("Backing up current log.")
-            f = open(self.logpath, "a+")  # use append mode to make sure it is created if non-existent
-            previous_data = f.read()
+            with open(self.logpath, "a+") as f: # use append mode to make sure it is created if non-existent
+                previous_data = f.read()
         except (IOError, OSError) as err:
             debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
-            f.close()
-
             try:
                 debug("Writing new log data.")
-                f = open(self.logpath, "w")
-                if data:
-                    f.write("[B][{0!s}][/B]\n".format(time.strftime("%d/%m/%Y  -  %H:%M:%S")))
-                    for line in data:
-                        if isinstance(line, unicode):
-                            line = line.encode()
-                        f.write(" - {0!s}\n".format(line))
-                    f.write("\n")
-                    debug("New data written to log file.")
-                else:
-                    debug("No data to write. Stopping.")
+                with open(self.logpath, "w") as f:
+                    if data:
+                        f.write("[B][{0!s}][/B]\n".format(time.strftime("%d/%m/%Y  -  %H:%M:%S")))
+                        for line in data:
+                            if isinstance(line, unicode):
+                                line = line.encode()
+                            f.write(" - {0!s}\n".format(line))
+                        f.write("\n")
+                        debug("New data written to log file.")
+                    else:
+                        debug("No data to write. Stopping.")
 
-                debug("Appending previous log file contents.")
-                f.writelines(previous_data)
+                    debug("Appending previous log file contents.")
+                    f.writelines(previous_data)
             except (IOError, OSError) as err:
-                debug("%s" % err, xbmc.LOGERROR)
-            else:
-                f.close()
+                debug("{0!s}".format(err), xbmc.LOGERROR)
 
     def trim(self, lines_to_keep=25):
         """
@@ -80,25 +76,22 @@ class Log(object):
         """
         try:
             debug("Trimming log file contents.")
-            f = open(self.logpath)
-            debug("Saving the top {0!d} lines.".format(lines_to_keep))
-            lines = []
-            for i in range(lines_to_keep):
-                lines.append(f.readline())
+            with open(self.logpath) as f:
+                debug("Saving the top {0!r} lines.".format(lines_to_keep))
+                lines = []
+                for i in range(lines_to_keep):
+                    lines.append(f.readline())
         except (IOError, OSError) as err:
             debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
-            f.close()
-
             try:
                 debug("Removing all log contents.")
-                f = open(self.logpath, "w")
-                debug("Restoring saved log contents.")
-                f.writelines(lines)
+                with open(self.logpath, "w") as f:
+                    debug("Restoring saved log contents.")
+                    f.writelines(lines)
             except (IOError, OSError) as err:
                 debug("{0!s}".format(err, xbmc.LOGERROR))
             else:
-                f.close()
                 return self.get()
 
     def clear(self):
@@ -110,12 +103,11 @@ class Log(object):
         """
         try:
             debug("Clearing log file contents.")
-            f = open(self.logpath, "r+")
-            f.truncate()
+            with open(self.logpath, "r+") as f:
+                f.truncate()
         except (IOError, OSError) as err:
             debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
-            f.close()
             return self.get()
 
     def get(self):
@@ -127,12 +119,11 @@ class Log(object):
         """
         try:
             debug("Retrieving log file contents.")
-            f = open(self.logpath, "a+")
+            with open(self.logpath, "a+") as f:
+                contents = f.read()
         except (IOError, OSError) as err:
             debug("{0!s}".format(err, xbmc.LOGERROR))
         else:
-            contents = f.read()
-            f.close()
             return contents
 
 
