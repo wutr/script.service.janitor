@@ -296,6 +296,8 @@ class Cleaner(object):
         by_exclusion1 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion1)}
         by_exclusion2 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion2)}
         by_exclusion3 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion3)}
+        by_exclusion4 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion4)}
+        by_exclusion5 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion5)}
 
         # link settings and filters together
         settings_and_filters = [
@@ -304,7 +306,9 @@ class Cleaner(object):
             (get_setting(not_in_progress), by_progress),
             (get_setting(exclusion_enabled) and get_setting(exclusion1) is not "", by_exclusion1),
             (get_setting(exclusion_enabled) and get_setting(exclusion2) is not "", by_exclusion2),
-            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion3)
+            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion3),
+            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion4),
+            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion5)
         ]
 
         # Only check not rated videos if checking for video ratings at all
