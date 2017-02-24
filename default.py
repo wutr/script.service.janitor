@@ -520,11 +520,11 @@ class Cleaner(object):
             debug("Attempting to match related files in {0!r} with prefix {1!r}".format(path, name))
             for extra_file in xbmcvfs.listdir(path)[1]:
                 if isinstance(path, unicode):
-                    path = path.encode()
+                    path = path.encode("utf-8")
                 if isinstance(extra_file, unicode):
-                    extra_file = extra_file.encode()
+                    extra_file = extra_file.encode("utf-8")
                 if isinstance(name, unicode):
-                    name = name.encode()
+                    name = name.encode("utf-8")
 
                 if extra_file.startswith(name):
                     debug("{0!r} starts with {1!r}.".format(extra_file, name))
@@ -556,7 +556,7 @@ class Cleaner(object):
         :return: 1 if (all stacked) files were moved, 0 if not, -1 if errors occurred
         """
         if isinstance(source, unicode):
-            source = source.encode()
+            source = source.encode("utf-8")
 
         paths = self.unstack(source)
         files_moved_successfully = 0
