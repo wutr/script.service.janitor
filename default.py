@@ -307,8 +307,8 @@ class Cleaner(object):
             (get_setting(exclusion_enabled) and get_setting(exclusion1) is not "", by_exclusion1),
             (get_setting(exclusion_enabled) and get_setting(exclusion2) is not "", by_exclusion2),
             (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion3),
-            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion4),
-            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion5)
+            (get_setting(exclusion_enabled) and get_setting(exclusion4) is not "", by_exclusion4),
+            (get_setting(exclusion_enabled) and get_setting(exclusion5) is not "", by_exclusion5)
         ]
 
         # Only check not rated videos if checking for video ratings at all
