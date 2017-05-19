@@ -4,6 +4,7 @@
 import json
 import sys
 
+from reset_exclusions import *
 from utils import *
 from viewer import *
 
@@ -641,6 +642,8 @@ if __name__ == "__main__":
         win = LogViewerDialog("JanitorLogViewer.xml", ADDON.getAddonInfo("path"))
         win.doModal()
         del win
+    elif len(sys.argv) > 1 and sys.argv[1] == "reset":
+        reset_exclusions()
     else:
         cleaner = Cleaner()
         if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
