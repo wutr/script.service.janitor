@@ -76,7 +76,11 @@ def get_setting(setting):
     elif setting in strings:
         return str(utils.ADDON.getSetting(setting))
     elif setting in paths:
-        return translatePath(utils.ADDON.getSetting(setting).encode("utf-8"))
+        try: 
+            path = utils.ADDON.getSetting(setting).encode("utf-8")
+        except UnicodeDecodeError:
+            path = utils.ADDON.getSetting(setting)
+        return translatePath(path)
     else:
         raise ValueError("Failed loading {0!r} value. Type {1!r} cannot be handled.".format(setting, type(setting)))
 
