@@ -3,8 +3,7 @@
 
 from default import Cleaner
 from settings import *
-from utils import notify
-from xbmc import log
+from utils import notify, debug
 
 
 def autostart():
@@ -37,7 +36,7 @@ def autostart():
         else:
             cleaner.monitor.waitForAbort(service_sleep)
 
-    log("Abort requested. Terminating.")
+    debug(u"Abort requested. Terminating.")
     return
 
 
