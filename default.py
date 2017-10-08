@@ -335,7 +335,7 @@ class Cleaner(object):
 
         rpc_cmd = json.dumps(request)
         response = xbmc.executeJSONRPC(rpc_cmd)
-        debug(u"[{0}] Response: {1}".format(self.methods[option], response))
+        debug(u"[{0}] Response: {1}".format(self.methods[option], response.decode("utf-8")))
         result = json.loads(response)
 
         # Check the results for errors
