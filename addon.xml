@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.service.janitor" name="Janitor" version="4.3.2" provider-name="Anthirian, drewzh">
     <requires>
-        <import addon="xbmc.python" version="2.25.0" />
-        <import addon="xbmc.json" version="7.0.0" />
-        <import addon="xbmc.gui" version="5.12.0" />
+        <import addon="xbmc.python" version="2.26.0" />
+        <import addon="xbmc.json" version="9.7.2" />
+        <import addon="xbmc.gui" version="5.14.0" />
     </requires>
     <extension point="xbmc.python.script" library="default.py" />
     <extension point="xbmc.service" library="service.py" start="login" />
@@ -46,9 +46,9 @@ Cet addon à la faculté de supprimer entièrement votre collection vidéo! Assu
         <website/>
         <email/>
         <news>
-[B][I]Version 4.3.2[/I][/B]
-- [FIX] Even better unicode support
-- [FIX] Minor tweaks
+[B][I]Version 4.4.0[/I][/B]
+- [NEW] Leia compatibility
+- [NEW] Updated log viewer to use Estuary skin
         </news>
         <assets>
             <icon>resources/icon.png</icon>

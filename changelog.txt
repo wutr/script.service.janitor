@@ -1,3 +1,7 @@
+[B][I]Version 4.4.0[/I][/B]
+- [NEW] Leia compatibility
+- [NEW] Updated log viewer to use Estuary skin
+
 [B][I]Version 4.3.3[/I][/B]
 - [FIX] Code optimizations
 
