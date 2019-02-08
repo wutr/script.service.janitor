@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.service.janitor" name="Janitor" version="4.3.2" provider-name="Anthirian, drewzh">
+<addon id="script.service.janitor" name="Janitor" version="4.4.0" provider-name="Anthirian, drewzh">
     <requires>
         <import addon="xbmc.python" version="2.26.0" />
         <import addon="xbmc.json" version="9.7.2" />
         <import addon="xbmc.gui" version="5.14.0" />
     </requires>
     <extension point="xbmc.python.script" library="default.py" />
-    <extension point="xbmc.service" library="service.py" start="login" />
+    <extension point="xbmc.service" library="service.py" />
     <extension point="xbmc.addon.metadata">
         <summary lang="en_GB">Regularly deletes old movies, TV show episodes and music videos</summary>
         <description lang="en_GB">
@@ -42,9 +42,9 @@ Cet addon à la faculté de supprimer entièrement votre collection vidéo! Assu
         <language>en nl fr</language>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
         <source>https://github.com/Anthirian/script.service.janitor</source>
-        <forum>http://forum.kodi.tv/showthread.php?tid=162517</forum>
-        <website/>
-        <email/>
+        <forum>https://forum.kodi.tv/showthread.php?tid=162517</forum>
+        <website>https://forum.kodi.tv/showthread.php?tid=162517</website>
+        <email>anthirian@users.noreply.github.com</email>
         <news>
 [B][I]Version 4.4.0[/I][/B]
 - [NEW] Leia compatibility
