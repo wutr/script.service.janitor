@@ -189,7 +189,6 @@ class Cleaner(object):
                     if not self.silent:
                         progress_percent += increment * 100
                         debug(u"Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
-                        title = title.encode("utf-8")
                         self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), u"[I]{0}[/I]".format(title))
                         self.monitor.waitForAbort(2)
                 else:
