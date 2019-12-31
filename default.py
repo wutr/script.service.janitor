@@ -24,32 +24,32 @@ class Cleaner(object):
     """
 
     # Constants to ensure correct (Gotham-compatible) JSON-RPC requests for Kodi
-    MOVIES = u"movies"
-    MUSIC_VIDEOS = u"musicvideos"
-    TVSHOWS = u"episodes"
-    CLEANING_TYPE_MOVE = u"0"
-    CLEANING_TYPE_DELETE = u"1"
-    DEFAULT_ACTION_CLEAN = u"0"
-    DEFAULT_ACTION_LOG = u"1"
+    MOVIES = "movies"
+    MUSIC_VIDEOS = "musicvideos"
+    TVSHOWS = "episodes"
+    CLEANING_TYPE_MOVE = "0"
+    CLEANING_TYPE_DELETE = "1"
+    DEFAULT_ACTION_CLEAN = "0"
+    DEFAULT_ACTION_LOG = "1"
 
     STATUS_SUCCESS = 1
     STATUS_FAILURE = 2
     STATUS_ABORTED = 3
 
-    movie_filter_fields = [u"title", u"plot", u"plotoutline", u"tagline", u"votes", u"rating", u"time", u"writers",
-                           u"playcount", u"lastplayed", u"inprogress", u"genre", u"country", u"year", u"director",
-                           u"actor", u"mpaarating", u"top250", u"studio", u"hastrailer", u"filename", u"path", u"set",
-                           u"tag", u"dateadded", u"videoresolution", u"audiochannels", u"videocodec", u"audiocodec",
-                           u"audiolanguage", u"subtitlelanguage", u"videoaspect", u"playlist"]
-    episode_filter_fields = [u"title", u"tvshow", u"plot", u"votes", u"rating", u"time", u"writers", u"airdate",
-                             u"playcount", u"lastplayed", u"inprogress", u"genre", u"year", u"director", u"actor",
-                             u"episode", u"season", u"filename", u"path", u"studio", u"mpaarating", u"dateadded",
-                             u"videoresolution", u"audiochannels", u"videocodec", u"audiocodec", u"audiolanguage",
-                             u"subtitlelanguage", u"videoaspect", u"playlist"]
-    musicvideo_filter_fields = [u"title", u"genre", u"album", u"year", u"artist", u"filename", u"path", u"playcount",
-                                u"lastplayed", u"time", u"director", u"studio", u"plot", u"dateadded",
-                                u"videoresolution", u"audiochannels", u"videocodec", u"audiocodec", u"audiolanguage",
-                                u"subtitlelanguage", u"videoaspect", u"playlist"]
+    movie_filter_fields = ["title", "plot", "plotoutline", "tagline", "votes", "rating", "time", "writers",
+                           "playcount", "lastplayed", "inprogress", "genre", "country", "year", "director",
+                           "actor", "mpaarating", "top250", "studio", "hastrailer", "filename", "path", "set",
+                           "tag", "dateadded", "videoresolution", "audiochannels", "videocodec", "audiocodec",
+                           "audiolanguage", "subtitlelanguage", "videoaspect", "playlist"]
+    episode_filter_fields = ["title", "tvshow", "plot", "votes", "rating", "time", "writers", "airdate",
+                             "playcount", "lastplayed", "inprogress", "genre", "year", "director", "actor",
+                             "episode", "season", "filename", "path", "studio", "mpaarating", "dateadded",
+                             "videoresolution", "audiochannels", "videocodec", "audiocodec", "audiolanguage",
+                             "subtitlelanguage", "videoaspect", "playlist"]
+    musicvideo_filter_fields = ["title", "genre", "album", "year", "artist", "filename", "path", "playcount",
+                                "lastplayed", "time", "director", "studio", "plot", "dateadded",
+                                "videoresolution", "audiochannels", "videocodec", "audiocodec", "audiolanguage",
+                                "subtitlelanguage", "videoaspect", "playlist"]
 
     supported_filter_fields = {
         TVSHOWS: episode_filter_fields,
@@ -57,16 +57,16 @@ class Cleaner(object):
         MUSIC_VIDEOS: musicvideo_filter_fields
     }
     methods = {
-        TVSHOWS: u"VideoLibrary.GetEpisodes",
-        MOVIES: u"VideoLibrary.GetMovies",
-        MUSIC_VIDEOS: u"VideoLibrary.GetMusicVideos"
+        TVSHOWS: "VideoLibrary.GetEpisodes",
+        MOVIES: "VideoLibrary.GetMovies",
+        MUSIC_VIDEOS: "VideoLibrary.GetMusicVideos"
     }
     properties = {
-        TVSHOWS: [u"file", u"showtitle"],
-        MOVIES: [u"file", u"title"],
-        MUSIC_VIDEOS: [u"file", u"artist"]
+        TVSHOWS: ["file", "showtitle"],
+        MOVIES: ["file", "title"],
+        MUSIC_VIDEOS: ["file", "artist"]
     }
-    stacking_indicators = [u"part", u"pt", u"cd", u"dvd", u"disk", u"disc"]
+    stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
 
     progress = xbmcgui.DialogProgress()
     monitor = xbmc.Monitor()
@@ -74,8 +74,8 @@ class Cleaner(object):
     exit_status = STATUS_SUCCESS
 
     def __init__(self):
-        debug(u"{0} version {1} loaded.".format(ADDON.getAddonInfo(u"name").decode("utf-8"),
-                                                ADDON.getAddonInfo(u"version").decode("utf-8")))
+        debug("{0} version {1} loaded.".format(ADDON.getAddonInfo("name"),
+                                                ADDON.getAddonInfo("version")))
 
     def __is_canceled(self):
         """
@@ -87,7 +87,7 @@ class Cleaner(object):
         if self.silent:
             return False
         elif self.progress.iscanceled():
-            debug(u"User canceled.", xbmc.LOGWARNING)
+            debug("User canceled.", xbmc.LOGWARNING)
             self.exit_status = self.STATUS_ABORTED
             return True
 
@@ -128,7 +128,7 @@ class Cleaner(object):
         elif video_type == self.MUSIC_VIDEOS:
             clean_this_video_type = get_setting(clean_music_videos)
         else:
-            debug(u"Incorrect video type specified: {0}".format(video_type), xbmc.LOGERROR)
+            debug("Incorrect video type specified: {0}".format(video_type), xbmc.LOGERROR)
             return [], 0, self.STATUS_FAILURE
 
         progress_percent = 0
@@ -137,7 +137,7 @@ class Cleaner(object):
             expired_videos = self.get_expired_videos(video_type)
             if not self.silent:
                 amount = len(expired_videos)
-                debug(u"Found {0} videos that may need cleaning.".format(amount))
+                debug("Found {0} videos that may need cleaning.".format(amount))
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
@@ -153,7 +153,7 @@ class Cleaner(object):
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
                                 if xbmcgui.Dialog().yesno(ADDON_NAME, *map(translate, (32521, 32522, 32523))):
-                                    xbmc.executebuiltin(u"Addon.OpenSettings({0})".format(ADDON_ID))
+                                    xbmc.executebuiltin("Addon.OpenSettings({0})".format(ADDON_ID))
                                 self.exit_status = self.STATUS_ABORTED
                                 break
                             if get_setting(create_subdirs):
@@ -164,7 +164,7 @@ class Cleaner(object):
                                 new_path = get_setting(holding_folder)
                             move_result = self.move_file(filename, new_path)
                             if move_result == 1:
-                                debug(u"File(s) moved successfully.")
+                                debug("File(s) moved successfully.")
                                 count += 1
                                 if len(unstacked_path) > 1:
                                     cleaned_files.extend(unstacked_path)
@@ -173,11 +173,11 @@ class Cleaner(object):
                                 self.clean_related_files(filename, new_path)
                                 self.delete_empty_folders(os.path.dirname(filename))
                             elif move_result == -1:
-                                debug(u"Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
+                                debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
                                 xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
                         elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
                             if self.delete_file(filename):
-                                debug(u"File(s) deleted successfully.")
+                                debug("File(s) deleted successfully.")
                                 count += 1
                                 if len(unstacked_path) > 1:
                                     cleaned_files.extend(unstacked_path)
@@ -186,17 +186,18 @@ class Cleaner(object):
                                 self.clean_related_files(filename)
                                 self.delete_empty_folders(os.path.dirname(filename))
                     else:
-                        debug(u"Not cleaning {0}.".format(filename), xbmc.LOGNOTICE)
+                        debug("Not cleaning {0}.".format(filename), xbmc.LOGNOTICE)
 
                     if not self.silent:
                         progress_percent += increment * 100
-                        debug(u"Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
-                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), u"[I]{0}[/I]".format(title))
+                        debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
+                        title = title.encode("utf-8")
+                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0}[/I]".format(title))
                         self.monitor.waitForAbort(2)
                 else:
-                    debug(u"We had {amt} {type} left to clean.".format(amt=(amount - count), type=type_translation[video_type]))
+                    debug("We had {amt} {type} left to clean.".format(amt=(amount - count), type=type_translation[video_type]))
         else:
-            debug(u"Cleaning of {0} is disabled. Skipping.".format(video_type))
+            debug("Cleaning of {0} is disabled. Skipping.".format(video_type))
             if not self.silent:
                 self.progress.update(0, translate(32624).format(type=type_translation[video_type]), *map(translate, (32625, 32615)))
                 self.monitor.waitForAbort(2)
@@ -210,10 +211,10 @@ class Cleaner(object):
         :rtype: (unicode, int)
         :return: A single-line (localized) summary of the cleaning results to be used for a notification, plus a status.
         """
-        debug(u"Starting cleaning routine.")
+        debug("Starting cleaning routine.")
 
         if get_setting(clean_when_idle) and xbmc.Player().isPlaying():
-            debug(u"Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
+            debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
             return None, self.exit_status
 
         results = {}
@@ -241,10 +242,10 @@ class Cleaner(object):
             if get_setting(clean_kodi_library):
                 self.monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
 
-                if xbmc.getCondVisibility(u"Library.IsScanningVideo"):
-                    debug(u"The video library is being updated. Skipping library cleanup.", xbmc.LOGWARNING)
+                if xbmc.getCondVisibility("Library.IsScanningVideo"):
+                    debug("The video library is being updated. Skipping library cleanup.", xbmc.LOGWARNING)
                 else:
-                    xbmc.executebuiltin(u"XBMC.CleanLibrary(video, false)")
+                    xbmc.executebuiltin("XBMC.CleanLibrary(video, false)")
 
         return self.summarize(results), self.exit_status
 
@@ -256,7 +257,7 @@ class Cleaner(object):
         :rtype: unicode
         :return: A comma separated summary of the cleaning results.
         """
-        summary = u""
+        summary = ""
 
         # Localize video types
         for vid_type, amount in details.items():
@@ -269,10 +270,10 @@ class Cleaner(object):
             else:
                 video_type = ""
 
-            summary += u"{0:d} {1}, ".format(amount, video_type)
+            summary += "{0:d} {1}, ".format(amount, video_type)
 
         # strip the comma and space from the last iteration and add the localized suffix
-        return u"{0}{1}".format(summary.rstrip(u", "), translate(32518)) if summary else u""
+        return "{0}{1}".format(summary.rstrip(", "), translate(32518)) if summary else ""
 
     def get_expired_videos(self, option):
         """
@@ -288,27 +289,27 @@ class Cleaner(object):
 
         # A non-exhaustive list of pre-defined filters to use during JSON-RPC requests
         # These are possible conditions that must be met before a video can be deleted
-        by_playcount = {u"field": u"playcount", u"operator": u"greaterthan", u"value": u"0"}
-        by_date_played = {u"field": u"lastplayed", u"operator": u"notinthelast", u"value": u"{0:f}".format(get_setting(expire_after))}
-        by_minimum_rating = {u"field": u"rating", u"operator": u"lessthan", u"value": u"{0:f}".format(get_setting(minimum_rating))}
-        by_no_rating = {u"field": u"rating", u"operator": u"isnot", u"value": u"0"}
-        by_progress = {u"field": u"inprogress", u"operator": u"false", u"value": u""}
-        by_exclusion1 = {u"field": u"path", u"operator": u"doesnotcontain", u"value": get_setting(exclusion1)}
-        by_exclusion2 = {u"field": u"path", u"operator": u"doesnotcontain", u"value": get_setting(exclusion2)}
-        by_exclusion3 = {u"field": u"path", u"operator": u"doesnotcontain", u"value": get_setting(exclusion3)}
-        by_exclusion4 = {u"field": u"path", u"operator": u"doesnotcontain", u"value": get_setting(exclusion4)}
-        by_exclusion5 = {u"field": u"path", u"operator": u"doesnotcontain", u"value": get_setting(exclusion5)}
+        by_playcount = {"field": "playcount", "operator": "greaterthan", "value": "0"}
+        by_date_played = {"field": "lastplayed", "operator": "notinthelast", "value": "{0:f}".format(get_setting(expire_after))}
+        by_minimum_rating = {"field": "rating", "operator": "lessthan", "value": "{0:f}".format(get_setting(minimum_rating))}
+        by_no_rating = {"field": "rating", "operator": "isnot", "value": "0"}
+        by_progress = {"field": "inprogress", "operator": "false", "value": ""}
+        by_exclusion1 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion1)}
+        by_exclusion2 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion2)}
+        by_exclusion3 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion3)}
+        by_exclusion4 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion4)}
+        by_exclusion5 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion5)}
 
         # link settings and filters together
         settings_and_filters = [
             (get_setting(enable_expiration), by_date_played),
             (get_setting(clean_when_low_rated), by_minimum_rating),
             (get_setting(not_in_progress), by_progress),
-            (get_setting(exclusion_enabled) and get_setting(exclusion1) is not u"", by_exclusion1),
-            (get_setting(exclusion_enabled) and get_setting(exclusion2) is not u"", by_exclusion2),
-            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not u"", by_exclusion3),
-            (get_setting(exclusion_enabled) and get_setting(exclusion4) is not u"", by_exclusion4),
-            (get_setting(exclusion_enabled) and get_setting(exclusion5) is not u"", by_exclusion5)
+            (get_setting(exclusion_enabled) and get_setting(exclusion1) is not "", by_exclusion1),
+            (get_setting(exclusion_enabled) and get_setting(exclusion2) is not "", by_exclusion2),
+            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion3),
+            (get_setting(exclusion_enabled) and get_setting(exclusion4) is not "", by_exclusion4),
+            (get_setting(exclusion_enabled) and get_setting(exclusion5) is not "", by_exclusion5)
         ]
 
         # Only check not rated videos if checking for video ratings at all
@@ -317,45 +318,46 @@ class Cleaner(object):
 
         enabled_filters = [by_playcount]
         for s, f in settings_and_filters:
-            if s and f[u"field"] in self.supported_filter_fields[option]:
+            if s and f["field"] in self.supported_filter_fields[option]:
                 enabled_filters.append(f)
 
-        debug(u"[{0}] Filters enabled: {1}".format(self.methods[option], enabled_filters))
+        debug("[{0}] Filters enabled: {1}".format(self.methods[option], enabled_filters))
 
-        filters = {u"and": enabled_filters}
+        filters = {"and": enabled_filters}
 
         request = {
-            u"jsonrpc": u"2.0",
-            u"method": self.methods[option],
-            u"params": {
-                u"properties": self.properties[option],
-                u"filter": filters
+            "jsonrpc": "2.0",
+            "method": self.methods[option],
+            "params": {
+                "properties": self.properties[option],
+                "filter": filters
             },
-            u"id": 1
+            "id": 1
         }
 
         rpc_cmd = json.dumps(request)
         response = xbmc.executeJSONRPC(rpc_cmd)
-        debug(u"[{0}] Response: {1}".format(self.methods[option], response.decode("utf-8")))
+        debug("[{0}] Response: {1}".format(self.methods[option], response))
         result = json.loads(response)
 
         # Check the results for errors
         try:
-            error = result[u"error"]
-            debug(u"An error occurred. {0}".format(error))
+            error = result["error"]
+            debug("An error occurred. {0}".format(error))
             return None
         except KeyError as ke:
-            if u"error" in ke:
-                pass  # no error
-            else:
-                raise
+            print(ke)
+            #if "error" in ke:
+            #    pass  # no error
+            #else:
+            #    raise
 
-        debug(u"Building list of expired videos")
+        debug("Building list of expired videos")
         expired_videos = []
-        response = result[u"result"]
+        response = result["result"]
         try:
-            debug(u"Found {0:d} watched {1} matching your conditions".format(response[u"limits"][u"total"], option))
-            debug(u"JSON Response: {0}".format(response))
+            debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
+            debug("JSON Response: {0}".format(response))
             for video in response[option]:
                 # Gather all properties and add it to this video's information
                 temp = []
@@ -366,11 +368,11 @@ class Cleaner(object):
             if option in ke:
                 pass  # no expired videos found
             else:
-                debug(u"KeyError: {0} not found".format(ke), xbmc.LOGWARNING)
-                debug(u"{0}".format(response), xbmc.LOGWARNING)
+                debug("KeyError: {0} not found".format(ke), xbmc.LOGWARNING)
+                debug("{0}".format(response), xbmc.LOGWARNING)
                 raise
         finally:
-            debug(u"Expired videos: {0}".format(expired_videos))
+            debug("Expired videos: {0}".format(expired_videos))
             return expired_videos
 
     def unstack(self, path):
@@ -381,11 +383,11 @@ class Cleaner(object):
         :rtype: list
         :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
         """
-        if path.startswith(u"stack://"):
-            debug(u"Unstacking {0}.".format(path))
-            return path.replace(u"stack://", u"").split(u" , ")
+        if path.startswith("stack://"):
+            debug("Unstacking {0}.".format(path))
+            return path.replace("stack://", "").split(" , ")
         else:
-            debug(u"Unstacking {0} is not needed.".format(path))
+            debug("Unstacking {0} is not needed.".format(path))
             return [path]
 
     def get_stack_bare_title(self, filenames):
@@ -399,10 +401,10 @@ class Cleaner(object):
         :rtype: str
         :return: common title of file names part of a stack
         """
-        title = os.path.basename(os.path.commonprefix([f.encode("utf-8") for f in filenames])).decode("utf-8")
+        title = os.path.basename(os.path.commonprefix([f.encode("utf-8") for f in filenames]))
         for e in self.stacking_indicators:
             if title.endswith(e):
-                title = title[:-len(e)].rstrip(u"._-")
+                title = title[:-len(e)].rstrip("._-")
                 break
         return title
 
@@ -418,7 +420,7 @@ class Cleaner(object):
         :rtype: bool
         :return: True if (at least one) file was deleted successfully, False otherwise.
         """
-        debug(u"Attempting to delete {0}".format(location))
+        debug("Attempting to delete {0}".format(location))
 
         paths = self.unstack(location)
         success = []
@@ -427,7 +429,7 @@ class Cleaner(object):
             if xbmcvfs.exists(p):
                 success.append(bool(xbmcvfs.delete(p)))
             else:
-                debug(u"File {0} no longer exists.".format(p), xbmc.LOGERROR)
+                debug("File {0} no longer exists.".format(p), xbmc.LOGERROR)
                 success.append(False)
 
         return any(success)
@@ -447,50 +449,50 @@ class Cleaner(object):
         :return: True if the folder was deleted successfully, False otherwise.
         """
         if not get_setting(delete_folders):
-            debug(u"Deleting of empty folders is disabled.")
+            debug("Deleting of empty folders is disabled.")
             return False
 
         folder = self.unstack(location)[0]  # Stacked paths should have the same parent, use any
-        debug(u"Checking if {0} is empty".format(folder))
-        ignored_file_types = [file_ext.strip() for file_ext in get_setting(ignore_extensions).split(u",")]
-        debug(u"Ignoring file types {0}".format(ignored_file_types))
+        debug("Checking if {0} is empty".format(folder))
+        ignored_file_types = [file_ext.strip() for file_ext in get_setting(ignore_extensions).split(",")]
+        debug("Ignoring file types {0}".format(ignored_file_types))
 
         subfolders, files = xbmcvfs.listdir(folder)
-        debug(u"Contents of {dir}:\nSubfolders: {sub}\nFiles: {files}".format(dir=folder, sub=subfolders, files=files))
+        debug("Contents of {dir}:\nSubfolders: {sub}\nFiles: {files}".format(dir=folder, sub=subfolders, files=files))
 
         empty = True
         try:
             for f in files:
                 _, ext = os.path.splitext(f)
                 if ext and ext not in ignored_file_types:  # ensure f is not a folder and its extension is not ignored
-                    debug(u"Found non-ignored file type {0}".format(ext))
+                    debug("Found non-ignored file type {0}".format(ext))
                     empty = False
                     break
         except OSError as oe:
-            debug(u"Error deriving file extension. Errno {0}".format(oe.errno), xbmc.LOGERROR)
+            debug("Error deriving file extension. Errno {0}".format(oe.errno), xbmc.LOGERROR)
             empty = False
 
         # Only delete directories if we found them to be empty (containing no files or filetypes we ignored)
         if empty:
-            debug(u"Directory is empty and will be removed")
+            debug("Directory is empty and will be removed")
             try:
                 # Recursively delete any subfolders
                 for f in subfolders:
-                    debug(u"Deleting file at {0}".format(os.path.join(folder, f)))
+                    debug("Deleting file at {0}".format(os.path.join(folder, f)))
                     self.delete_empty_folders(os.path.join(folder, f))
 
                 # Delete any files in the current folder
                 for f in files:
-                    debug(u"Deleting file at {0}".format(os.path.join(folder, f)))
+                    debug("Deleting file at {0}".format(os.path.join(folder, f)))
                     xbmcvfs.delete(os.path.join(folder, f))
 
                 # Finally delete the current folder
                 return xbmcvfs.rmdir(folder)
             except OSError as oe:
-                debug(u"An exception occurred while deleting folders. Errno {0}".format(oe.errno), xbmc.LOGERROR)
+                debug("An exception occurred while deleting folders. Errno {0}".format(oe.errno), xbmc.LOGERROR)
                 return False
         else:
-            debug(u"Directory is not empty and will not be removed")
+            debug("Directory is not empty and will not be removed")
             return False
 
     def clean_related_files(self, source, dest_folder=None):
@@ -506,34 +508,34 @@ class Cleaner(object):
         :param dest_folder: (Optional) The folder where related files should be moved to. Not needed when deleting.
         """
         if get_setting(clean_related):
-            debug(u"Cleaning related files.")
+            debug("Cleaning related files.")
 
             path_list = self.unstack(source)
             path, name = os.path.split(path_list[0])  # Because stacked movies are in the same folder, only check one
-            if source.startswith(u"stack://"):
+            if source.startswith("stack://"):
                 name = self.get_stack_bare_title(path_list)
             else:
                 name, ext = os.path.splitext(name)
 
-            debug(u"Attempting to match related files in {0} with prefix {1}".format(path, name))
+            debug("Attempting to match related files in {0} with prefix {1}".format(path, name))
             for extra_file in xbmcvfs.listdir(path)[1]:
                 extra_file = unicode(extra_file, encoding="utf-8")
 
                 if extra_file.startswith(name):
-                    debug(u"{0} starts with {1}.".format(extra_file, name))
+                    debug("{0} starts with {1}.".format(extra_file, name))
                     extra_file_path = os.path.join(path, extra_file)
                     if get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if extra_file_path not in path_list:
-                            debug(u"Deleting {0}.".format(extra_file_path))
+                            debug("Deleting {0}.".format(extra_file_path))
                             xbmcvfs.delete(extra_file_path)
                     elif get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         new_extra_path = os.path.join(dest_folder, os.path.basename(extra_file))
                         if new_extra_path not in path_list:
-                            debug(u"Moving {0} to {1}.".format(extra_file_path, new_extra_path))
+                            debug("Moving {0} to {1}.".format(extra_file_path, new_extra_path))
                             xbmcvfs.rename(extra_file_path, new_extra_path)
-            debug(u"Finished searching for related files.")
+            debug("Finished searching for related files.")
         else:
-            debug(u"Cleaning of related files is disabled.")
+            debug("Cleaning of related files is disabled.")
 
     def move_file(self, source, dest_folder):
         """Move a file to a new destination. Will create destination if it does not exist.
@@ -553,23 +555,23 @@ class Cleaner(object):
         dest_folder = unicode(xbmc.makeLegalFilename(dest_folder), encoding="utf-8")
 
         for p in paths:
-            debug(u"Attempting to move {0} to {1}.".format(p, dest_folder))
+            debug("Attempting to move {0} to {1}.".format(p, dest_folder))
             if xbmcvfs.exists(p):
                 if not xbmcvfs.exists(dest_folder):
                     if xbmcvfs.mkdirs(dest_folder):
-                        debug(u"Created destination {0}.".format(dest_folder))
+                        debug("Created destination {0}.".format(dest_folder))
                     else:
-                        debug(u"Destination {0} could not be created.".format(dest_folder), xbmc.LOGERROR)
+                        debug("Destination {0} could not be created.".format(dest_folder), xbmc.LOGERROR)
                         return -1
 
                 new_path = os.path.join(dest_folder, os.path.basename(p))
 
                 if xbmcvfs.exists(new_path):
-                    debug(u"A file with the same name already exists in the holding folder. Checking file sizes.")
+                    debug("A file with the same name already exists in the holding folder. Checking file sizes.")
                     existing_file = xbmcvfs.File(new_path)
                     file_to_move = xbmcvfs.File(p)
                     if file_to_move.size() > existing_file.size():
-                        debug(u"This file is larger than the existing file. Replacing it with this one.")
+                        debug("This file is larger than the existing file. Replacing it with this one.")
                         existing_file.close()
                         file_to_move.close()
                         if bool(xbmcvfs.delete(new_path) and bool(xbmcvfs.rename(p, new_path))):
@@ -577,7 +579,7 @@ class Cleaner(object):
                         else:
                             return -1
                     else:
-                        debug(u"This file isn't larger than the existing file. Deleting it instead of moving.")
+                        debug("This file isn't larger than the existing file. Deleting it instead of moving.")
                         existing_file.close()
                         file_to_move.close()
                         if bool(xbmcvfs.delete(p)):
@@ -585,26 +587,26 @@ class Cleaner(object):
                         else:
                             return -1
                 else:
-                    debug(u"Moving {0} to {1}.".format(p, new_path))
+                    debug("Moving {0} to {1}.".format(p, new_path))
                     move_success = bool(xbmcvfs.rename(p, new_path))
                     copy_success, delete_success = False, False
                     if not move_success:
-                        debug(u"Move failed, falling back to copy and delete.", xbmc.LOGWARNING)
+                        debug("Move failed, falling back to copy and delete.", xbmc.LOGWARNING)
                         copy_success = bool(xbmcvfs.copy(p, new_path))
                         if copy_success:
-                            debug(u"Copied successfully, attempting delete of source file.")
+                            debug("Copied successfully, attempting delete of source file.")
                             delete_success = bool(xbmcvfs.delete(p))
                             if not delete_success:
-                                debug(u"Could not remove source file. Please remove the file manually.", xbmc.LOGWARNING)
+                                debug("Could not remove source file. Please remove the file manually.", xbmc.LOGWARNING)
                         else:
-                            debug(u"Copying failed, please make sure you have appropriate permissions.", xbmc.LOGFATAL)
+                            debug("Copying failed, please make sure you have appropriate permissions.", xbmc.LOGFATAL)
                             return -1
 
                     if move_success or (copy_success and delete_success):
                         files_moved_successfully += 1
 
             else:
-                debug(u"File {0} is no longer available.".format(p), xbmc.LOGWARNING)
+                debug("File {0} is no longer available.".format(p), xbmc.LOGWARNING)
 
         return 1 if len(paths) == files_moved_successfully else -1
 
@@ -618,25 +620,25 @@ class Cleaner(object):
         :rtype: bool
         """
         if get_setting(keep_hard_linked):
-            debug(u"Making sure the number of hard links is exactly one.")
+            debug("Making sure the number of hard links is exactly one.")
             is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
-            debug(u"No hard links detected." if is_hard_linked else u"Hard links detected. Skipping.")
+            debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
         else:
-            debug(u"Not checking for hard links.")
+            debug("Not checking for hard links.")
             return True
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == u"log":
-        win = LogViewerDialog("JanitorLogViewer.xml", ADDON.getAddonInfo(u"path"))
+    if len(sys.argv) > 1 and sys.argv[1] == "log":
+        win = LogViewerDialog("JanitorLogViewer.xml", ADDON.getAddonInfo("path"))
         win.doModal()
         del win
-    elif len(sys.argv) > 1 and sys.argv[1] == u"reset":
+    elif len(sys.argv) > 1 and sys.argv[1] == "reset":
         reset_exclusions()
     else:
         cleaner = Cleaner()
         if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
-            xbmc.executebuiltin(u"RunScript({0}, log)".format(ADDON_ID))
+            xbmc.executebuiltin("RunScript({0}, log)".format(ADDON_ID))
         else:
             cleaner.show_progress()
             results, return_status = cleaner.clean_all()
@@ -644,9 +646,9 @@ if __name__ == "__main__":
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
                 if xbmcgui.Dialog().yesno(translate(32514), results, translate(32519)):
-                    xbmc.executebuiltin(u"RunScript({0}, log)".format(ADDON_ID))
+                    xbmc.executebuiltin("RunScript({0}, log)".format(ADDON_ID))
             elif return_status == cleaner.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder
                 pass
             else:
-                xbmcgui.Dialog().ok(ADDON_NAME.decode("utf-8"), translate(32520))
+                xbmcgui.Dialog().ok(ADDON_NAME, translate(32520))
