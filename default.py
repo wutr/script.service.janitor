@@ -74,8 +74,7 @@ class Cleaner(object):
     exit_status = STATUS_SUCCESS
 
     def __init__(self):
-        debug("{0} version {1} loaded.".format(ADDON.getAddonInfo("name"),
-                                                ADDON.getAddonInfo("version")))
+        debug(f"{ADDON.getAddonInfo('name')} version {ADDON.getAddonInfo('version')} loaded.")
 
     def __is_canceled(self):
         """
@@ -137,7 +136,7 @@ class Cleaner(object):
             expired_videos = self.get_expired_videos(video_type)
             if not self.silent:
                 amount = len(expired_videos)
-                debug("Found {0} videos that may need cleaning.".format(amount))
+                debug(f"Found {amount} videos that may need cleaning.")
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
@@ -153,13 +152,12 @@ class Cleaner(object):
                             # No destination set, prompt user to set one now
                             if get_setting(holding_folder) == "":
                                 if xbmcgui.Dialog().yesno(ADDON_NAME, *map(translate, (32521, 32522, 32523))):
-                                    xbmc.executebuiltin("Addon.OpenSettings({0})".format(ADDON_ID))
+                                    xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
                                 self.exit_status = self.STATUS_ABORTED
                                 break
                             if get_setting(create_subdirs):
                                 title = re.sub(r"[\\/:*?\"<>|]+","_", title)
-                                new_path = os.path.join(get_setting(holding_folder).encode("utf-8"),
-                                                        title.encode("utf-8"))
+                                new_path = os.path.join(get_setting(holding_folder), title)
                             else:
                                 new_path = get_setting(holding_folder)
                             move_result = self.move_file(filename, new_path)
@@ -186,18 +184,18 @@ class Cleaner(object):
                                 self.clean_related_files(filename)
                                 self.delete_empty_folders(os.path.dirname(filename))
                     else:
-                        debug("Not cleaning {0}.".format(filename), xbmc.LOGNOTICE)
+                        debug(f"Not cleaning {filename}.", xbmc.LOGNOTICE)
 
                     if not self.silent:
                         progress_percent += increment * 100
-                        debug("Progress percent is {percent}, amount is {amount} and increment is {increment}".format(percent=progress_percent, amount=amount, increment=increment))
+                        debug(f"Progress percent is {progress_percent}, amount is {amount} and increment is {increment}")
                         title = title.encode("utf-8")
-                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), "[I]{0}[/I]".format(title))
+                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), f"[I]{title}[/I]")
                         self.monitor.waitForAbort(2)
                 else:
-                    debug("We had {amt} {type} left to clean.".format(amt=(amount - count), type=type_translation[video_type]))
+                    debug(f"We had {amount - count} {type_translation[video_type]} left to clean.")
         else:
-            debug("Cleaning of {0} is disabled. Skipping.".format(video_type))
+            debug(f"Cleaning of {video_type} is disabled. Skipping.")
             if not self.silent:
                 self.progress.update(0, translate(32624).format(type=type_translation[video_type]), *map(translate, (32625, 32615)))
                 self.monitor.waitForAbort(2)
@@ -273,7 +271,7 @@ class Cleaner(object):
             summary += "{0:d} {1}, ".format(amount, video_type)
 
         # strip the comma and space from the last iteration and add the localized suffix
-        return "{0}{1}".format(summary.rstrip(", "), translate(32518)) if summary else ""
+        return f"{summary.rstrip(', ')}{translate(32518)}" if summary else ""
 
     def get_expired_videos(self, option):
         """
@@ -321,7 +319,7 @@ class Cleaner(object):
             if s and f["field"] in self.supported_filter_fields[option]:
                 enabled_filters.append(f)
 
-        debug("[{0}] Filters enabled: {1}".format(self.methods[option], enabled_filters))
+        debug(f"[{self.methods[option]}] Filters enabled: {enabled_filters}")
 
         filters = {"and": enabled_filters}
 
@@ -337,13 +335,13 @@ class Cleaner(object):
 
         rpc_cmd = json.dumps(request)
         response = xbmc.executeJSONRPC(rpc_cmd)
-        debug("[{0}] Response: {1}".format(self.methods[option], response))
+        debug(f"[{self.methods[option]}] Response: {response}")
         result = json.loads(response)
 
         # Check the results for errors
         try:
             error = result["error"]
-            debug("An error occurred. {0}".format(error))
+            debug(f"An error occurred. {error}")
             return None
         except KeyError as ke:
             print(ke)
@@ -357,7 +355,7 @@ class Cleaner(object):
         response = result["result"]
         try:
             debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
-            debug("JSON Response: {0}".format(response))
+            debug(f"JSON Response: {response}")
             for video in response[option]:
                 # Gather all properties and add it to this video's information
                 temp = []
@@ -368,11 +366,11 @@ class Cleaner(object):
             if option in ke:
                 pass  # no expired videos found
             else:
-                debug("KeyError: {0} not found".format(ke), xbmc.LOGWARNING)
-                debug("{0}".format(response), xbmc.LOGWARNING)
+                debug(f"KeyError: {ke} not found", xbmc.LOGWARNING)
+                debug(f"{response}", xbmc.LOGWARNING)
                 raise
         finally:
-            debug("Expired videos: {0}".format(expired_videos))
+            debug(f"Expired videos: {expired_videos}")
             return expired_videos
 
     def unstack(self, path):
@@ -384,10 +382,10 @@ class Cleaner(object):
         :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
         """
         if path.startswith("stack://"):
-            debug("Unstacking {0}.".format(path))
+            debug(f"Unstacking {path}.")
             return path.replace("stack://", "").split(" , ")
         else:
-            debug("Unstacking {0} is not needed.".format(path))
+            debug(f"Unstacking {path} is not needed.")
             return [path]
 
     def get_stack_bare_title(self, filenames):
@@ -401,7 +399,7 @@ class Cleaner(object):
         :rtype: str
         :return: common title of file names part of a stack
         """
-        title = os.path.basename(os.path.commonprefix([f.encode("utf-8") for f in filenames]))
+        title = os.path.basename(os.path.commonprefix([f for f in filenames]))
         for e in self.stacking_indicators:
             if title.endswith(e):
                 title = title[:-len(e)].rstrip("._-")
@@ -429,7 +427,7 @@ class Cleaner(object):
             if xbmcvfs.exists(p):
                 success.append(bool(xbmcvfs.delete(p)))
             else:
-                debug("File {0} no longer exists.".format(p), xbmc.LOGERROR)
+                debug(f"File {p} no longer exists.", xbmc.LOGERROR)
                 success.append(False)
 
         return any(success)
@@ -453,23 +451,23 @@ class Cleaner(object):
             return False
 
         folder = self.unstack(location)[0]  # Stacked paths should have the same parent, use any
-        debug("Checking if {0} is empty".format(folder))
+        debug(f"Checking if {folder} is empty")
         ignored_file_types = [file_ext.strip() for file_ext in get_setting(ignore_extensions).split(",")]
-        debug("Ignoring file types {0}".format(ignored_file_types))
+        debug(f"Ignoring file types {ignored_file_types}")
 
         subfolders, files = xbmcvfs.listdir(folder)
-        debug("Contents of {dir}:\nSubfolders: {sub}\nFiles: {files}".format(dir=folder, sub=subfolders, files=files))
+        debug(f"Contents of {folder}:\nSubfolders: {subfolders}\nFiles: {files}")
 
         empty = True
         try:
             for f in files:
                 _, ext = os.path.splitext(f)
                 if ext and ext not in ignored_file_types:  # ensure f is not a folder and its extension is not ignored
-                    debug("Found non-ignored file type {0}".format(ext))
+                    debug(f"Found non-ignored file type {ext}")
                     empty = False
                     break
         except OSError as oe:
-            debug("Error deriving file extension. Errno {0}".format(oe.errno), xbmc.LOGERROR)
+            debug(f"Error deriving file extension. Errno {oe.errno}", xbmc.LOGERROR)
             empty = False
 
         # Only delete directories if we found them to be empty (containing no files or filetypes we ignored)
@@ -478,18 +476,18 @@ class Cleaner(object):
             try:
                 # Recursively delete any subfolders
                 for f in subfolders:
-                    debug("Deleting file at {0}".format(os.path.join(folder, f)))
+                    debug(f"Deleting file at {os.path.join(folder, f)}")
                     self.delete_empty_folders(os.path.join(folder, f))
 
                 # Delete any files in the current folder
                 for f in files:
-                    debug("Deleting file at {0}".format(os.path.join(folder, f)))
+                    debug(f"Deleting file at {os.path.join(folder, f)}")
                     xbmcvfs.delete(os.path.join(folder, f))
 
                 # Finally delete the current folder
                 return xbmcvfs.rmdir(folder)
             except OSError as oe:
-                debug("An exception occurred while deleting folders. Errno {0}".format(oe.errno), xbmc.LOGERROR)
+                debug(f"An exception occurred while deleting folders. Errno {oe.errno}", xbmc.LOGERROR)
                 return False
         else:
             debug("Directory is not empty and will not be removed")
@@ -517,21 +515,19 @@ class Cleaner(object):
             else:
                 name, ext = os.path.splitext(name)
 
-            debug("Attempting to match related files in {0} with prefix {1}".format(path, name))
+            debug(f"Attempting to match related files in {path} with prefix {name}")
             for extra_file in xbmcvfs.listdir(path)[1]:
-                extra_file = unicode(extra_file, encoding="utf-8")
-
                 if extra_file.startswith(name):
-                    debug("{0} starts with {1}.".format(extra_file, name))
+                    debug(f"{extra_file} starts with {name}.")
                     extra_file_path = os.path.join(path, extra_file)
                     if get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if extra_file_path not in path_list:
-                            debug("Deleting {0}.".format(extra_file_path))
+                            debug(f"Deleting {extra_file_path}.")
                             xbmcvfs.delete(extra_file_path)
                     elif get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         new_extra_path = os.path.join(dest_folder, os.path.basename(extra_file))
                         if new_extra_path not in path_list:
-                            debug("Moving {0} to {1}.".format(extra_file_path, new_extra_path))
+                            debug(f"Moving {extra_file_path} to {new_extra_path}.")
                             xbmcvfs.rename(extra_file_path, new_extra_path)
             debug("Finished searching for related files.")
         else:
@@ -555,13 +551,13 @@ class Cleaner(object):
         dest_folder = unicode(xbmc.makeLegalFilename(dest_folder), encoding="utf-8")
 
         for p in paths:
-            debug("Attempting to move {0} to {1}.".format(p, dest_folder))
+            debug(f"Attempting to move {p} to {dest_folder}.")
             if xbmcvfs.exists(p):
                 if not xbmcvfs.exists(dest_folder):
                     if xbmcvfs.mkdirs(dest_folder):
-                        debug("Created destination {0}.".format(dest_folder))
+                        debug(f"Created destination {dest_folder}.")
                     else:
-                        debug("Destination {0} could not be created.".format(dest_folder), xbmc.LOGERROR)
+                        debug(f"Destination {dest_folder} could not be created.", xbmc.LOGERROR)
                         return -1
 
                 new_path = os.path.join(dest_folder, os.path.basename(p))
@@ -587,7 +583,7 @@ class Cleaner(object):
                         else:
                             return -1
                 else:
-                    debug("Moving {0} to {1}.".format(p, new_path))
+                    debug(f"Moving {p} to {new_path}.")
                     move_success = bool(xbmcvfs.rename(p, new_path))
                     copy_success, delete_success = False, False
                     if not move_success:
@@ -606,7 +602,7 @@ class Cleaner(object):
                         files_moved_successfully += 1
 
             else:
-                debug("File {0} is no longer available.".format(p), xbmc.LOGWARNING)
+                debug(f"File {p} is no longer available.", xbmc.LOGWARNING)
 
         return 1 if len(paths) == files_moved_successfully else -1
 
@@ -638,7 +634,7 @@ if __name__ == "__main__":
     else:
         cleaner = Cleaner()
         if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
-            xbmc.executebuiltin("RunScript({0}, log)".format(ADDON_ID))
+            xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
         else:
             cleaner.show_progress()
             results, return_status = cleaner.clean_all()
@@ -646,7 +642,7 @@ if __name__ == "__main__":
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
                 if xbmcgui.Dialog().yesno(translate(32514), results, translate(32519)):
-                    xbmc.executebuiltin("RunScript({0}, log)".format(ADDON_ID))
+                    xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
             elif return_status == cleaner.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder
                 pass
