@@ -545,7 +545,7 @@ class Cleaner(object):
         """
         paths = self.unstack(source)
         files_moved_successfully = 0
-        dest_folder = unicode(xbmc.makeLegalFilename(dest_folder), encoding="utf-8")
+        dest_folder = xbmcvfs.makeLegalFilename(dest_folder)
 
         for p in paths:
             debug(f"Attempting to move {p} to {dest_folder}.")
