@@ -133,19 +133,9 @@ class Cleaner(object):
         progress_percent = 0
         count = 0
         increment = 0
-        self.total_expired = 0
 
         if clean_this_video_type:
-            expired_videos = self.get_expired_videos(video_type)
-            if not self.silent:
-                # Assumes total_expired is set after querying the Kodi database via JSON-RPC
-                debug(f"Found {self.total_expired} videos that may need cleaning.")
-                try:
-                    increment = 1.0 / self.total_expired
-                except ZeroDivisionError:
-                    pass  # No videos found that need cleaning
-
-            for filename, title in expired_videos:
+            for filename, title in self.get_expired_videos(video_type):
                 if not self.__is_canceled():
                     unstacked_path = self.unstack(filename)
                     if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
@@ -173,6 +163,7 @@ class Cleaner(object):
                                 self.delete_empty_folders(os.path.dirname(filename))
                             elif move_result == -1:
                                 debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
+                                # TODO: Fix this dialog now that the first line can span multiple lines
                                 xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
                         elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
                             if self.delete_file(filename):
@@ -188,8 +179,13 @@ class Cleaner(object):
                         debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGNOTICE)
 
                     if not self.silent:
-                        progress_percent += increment * 100
-                        debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
+                        debug(f"Found {self.total_expired} videos that may need cleaning.")
+                        try:
+                            # TODO: Incorporate number of video types being cleaned into the calculation
+                            progress_percent += 1 / self.total_expired * 100
+                        except ZeroDivisionError:
+                            progress_percent += 0  # No videos found that need cleaning
+                        #debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
                         self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
                         self.monitor.waitForAbort(2)
                 else:
@@ -350,7 +346,6 @@ class Cleaner(object):
                 raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}")
 
         debug("Building list of expired videos")
-        expired_videos = []
         response = result["result"]
         self.total_expired = int(response["limits"]["total"])
 
