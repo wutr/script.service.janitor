@@ -281,12 +281,12 @@ msgid " were cleaned"
 msgstr " zostało wyczyszczonych"
 
 msgctxt "#32519"
-msgid "Would you like to view the cleaning log?"
-msgstr "Chcesz wyświetlić dziennik czyszczenia?"
+msgid "{summary}\nWould you like to view the cleaning log?"
+msgstr "{summary}\nChcesz wyświetlić dziennik czyszczenia?"
 
 msgctxt "#32520"
-msgid "No cleaning required"
-msgstr "Nie wymaga czyszczenia"
+msgid "Cleaning not required. Watch some videos or adjust your settings."
+msgstr "Czyszczenie nie jest wymagane. Obejrzyj niektóre filmy lub dostosuj ustawienia."
 
 msgctxt "#32521"
 msgid "The destination folder is not set up."

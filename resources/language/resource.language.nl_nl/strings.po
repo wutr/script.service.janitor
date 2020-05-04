@@ -281,12 +281,12 @@ msgid " were cleaned"
 msgstr " zijn opgeschoond"
 
 msgctxt "#32519"
-msgid "Would you like to view the cleaning log?"
-msgstr "Wil je het schoonmaaklogboek bekijken?"
+msgid "{summary}\nWould you like to view the cleaning log?"
+msgstr "{summary}\nWil je het schoonmaaklogboek bekijken?"
 
 msgctxt "#32520"
-msgid "No cleaning required."
-msgstr "Schoonmaken is niet nodig."
+msgid "Cleaning not required. Watch some videos or adjust your settings."
+msgstr "Opschonen niet nodig. Bekijk een video of pas je instellingen aan."
 
 msgctxt "#32521"
 msgid "The destination folder is not set up."

@@ -281,12 +281,12 @@ msgid " were cleaned"
 msgstr ""
 
 msgctxt "#32519"
-msgid "Would you like to view the cleaning log?"
+msgid "{summary}\nWould you like to view the cleaning log?"
 msgstr ""
 
 # TODO: change to more general description why cleaning was not performed
 msgctxt "#32520"
-msgid "No cleaning performed"
+msgid "Cleaning not required. Watch some videos or adjust your settings."
 msgstr ""
 
 msgctxt "#32521"

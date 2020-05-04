@@ -281,13 +281,13 @@ msgid " were cleaned"
 msgstr " ont été nettoyés"
 
 msgctxt "#32519"
-msgid "Would you like to view the cleaning log?"
-msgstr "Voulez vous ouvrir le log de nettoyage"
+msgid "{summary}\nWould you like to view the cleaning log?"
+msgstr "{summary}\nVoulez vous ouvrir le log de nettoyage"
 
 # TODO: change to more general description why cleaning was not performed
 msgctxt "#32520"
-msgid "No cleaning performed"
-msgstr "Pas de nettoyage à faire"
+msgid "Cleaning not required. Watch some videos or adjust your settings."
+msgstr "Nettoyage pas nécessaire. Regardez des vidéos ou modifiez vos paramètres."
 
 msgctxt "#32521"
 msgid "The destination folder is not set up. You must first select a holding folder. Would you like to do this now?"
