@@ -3,7 +3,6 @@
 
 import json
 import sys
-import re
 
 from reset_exclusions import *
 from utils import *
@@ -117,7 +116,7 @@ class Cleaner(object):
 
         if not self.silent:
             # Cleaning <video type>
-            self.progress.update(0, translate(32629).format(type=type_translation[video_type]), *map(translate, (32615, 32615)))
+            self.progress.update(0, translate(32629).format(type=type_translation[video_type]))
             self.monitor.waitForAbort(1)
 
         if video_type == self.TVSHOWS:
@@ -140,7 +139,7 @@ class Cleaner(object):
                 try:
                     increment = 1.0 / amount
                 except ZeroDivisionError:
-                    self.progress.update(0, *map(translate, (32621, 32622, 32623)))  # No watched videos found
+                    self.progress.update(0, translate(32621))  # No watched videos found
                     if self.monitor.waitForAbort(2.5):
                         pass
 
@@ -189,15 +188,14 @@ class Cleaner(object):
                     if not self.silent:
                         progress_percent += increment * 100
                         debug(f"Progress percent is {progress_percent}, amount is {amount} and increment is {increment}")
-                        title = title.encode("utf-8")
-                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type]), translate(32617), f"[I]{title}[/I]")
+                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type], title=title))
                         self.monitor.waitForAbort(2)
                 else:
                     debug(f"We had {amount - count} {type_translation[video_type]} left to clean.")
         else:
             debug(f"Cleaning of {video_type} is disabled. Skipping.")
             if not self.silent:
-                self.progress.update(0, translate(32624).format(type=type_translation[video_type]), *map(translate, (32625, 32615)))
+                self.progress.update(0, translate(32624).format(type=type_translation[video_type]))
                 self.monitor.waitForAbort(2)
 
         return cleaned_files, count, self.exit_status
@@ -219,7 +217,7 @@ class Cleaner(object):
         cleaning_results, cleaned_files = [], []
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and disk_space_low()):
             if not self.silent:
-                self.progress.create(ADDON_NAME, *map(translate, (32619, 32615, 32615)))
+                self.progress.create(ADDON_NAME)
                 self.progress.update(0)
                 self.monitor.waitForAbort(2)
             for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:

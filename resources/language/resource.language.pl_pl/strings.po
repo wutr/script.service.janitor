@@ -290,15 +290,7 @@ msgstr "Nie wymaga czyszczenia"
 
 msgctxt "#32521"
 msgid "The destination folder is not set up."
-msgstr "Folder docelowy nie określony"
-
-msgctxt "#32522"
-msgid "You must first select a holding folder."
-msgstr "Musisz najpierw podać folder zawierający"
-
-msgctxt "#32523"
-msgid "Would you like to do this now?"
-msgstr "Czy chcesz to zrobić teraz?"
+msgstr "Folder docelowy nie określony. Musisz najpierw podać folder zawierający. Czy chcesz to zrobić teraz?"
 
 # Temporary, until Linux remote share disk space checks are supported
 msgctxt "#32524"
@@ -367,3 +359,48 @@ msgstr "Upewnij się, że masz odpowiednie uprawnienia i spróbuj ponownie"
 msgctxt "#32614"
 msgid "Please check the log file for details and move the particular files manually."
 msgstr "Sprawdź plik log po szczegóły następnie przenieś odpowiednie pliki ręcznie"
+
+# Progress dialog translations. Keep the text between brackets as is! All dialogs have three lines we need to fill.
+msgctxt "#32615"
+msgid " "
+msgstr "" # One space is required to remove line from previous dialog
+
+msgctxt "#32616"
+msgid "[B]{amount}[/B] {type} have expired. Testing for exclusions.\n[I]{title}[/I]"
+msgstr "Wygasło [B]{amount}[/B] {type}. Testowanie wykluczeń.\n[I]{title}[/I]"
+
+msgctxt "#32617
+# Create progress dialog
+msgctxt "#32618"
+msgid "Cleaning {type}"
+msgstr "Czyszczenie {type}"
+
+msgctxt "#32619"
+msgid "Starting cleaning routine."
+msgstr "Rozpoczęcie procedury czyszczenia."
+
+# No videos match cleaning criteria
+msgctxt "#32621"
+msgid "Cleaning not required. Watch some videos or adjust your settings."
+msgstr "Czyszczenie nie jest wymagane. Obejrzyj niektóre filmy lub dostosuj ustawienia."
+
+# Cleaning of this video type is not enabled
+msgctxt "#32624"
+msgid "Cleaning {type} is disabled. Skipping cleaning."
+msgstr "Czyszczenie {type} jest wyłączone. Pomijam czyszczenie."
+
+msgctxt "#32626"
+msgid "movies"
+msgstr "filmów"
+
+msgctxt "#32627"
+msgid "music videos"
+msgstr "teledysków"
+
+msgctxt "#32628"
+msgid "episodes"
+msgstr "odcineków"
+
+msgctxt "#32629"
+msgid "[B]Cleaning {type}[/B]"
+msgstr "[B]Czyszczenie {type}[/B]"

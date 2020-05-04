@@ -290,15 +290,7 @@ msgid "No cleaning performed"
 msgstr ""
 
 msgctxt "#32521"
-msgid "The destination folder is not set up."
-msgstr ""
-
-msgctxt "#32522"
-msgid "You must first select a holding folder."
-msgstr ""
-
-msgctxt "#32523"
-msgid "Would you like to do this now?"
+msgid "The destination folder is not set up. You must first select a holding folder. Would you like to do this now?"
 msgstr ""
 
 # Temporary, until Linux remote share disk space checks are supported
@@ -378,11 +370,7 @@ msgid " "
 msgstr ""
 
 msgctxt "#32616"
-msgid "[B]{amount}[/B] {type} have expired."
-msgstr ""
-
-msgctxt "#32617"
-msgid "Testing for exclusions."
+msgid "[B]{amount}[/B] {type} have expired. Testing for exclusions.\n[I]{title}[/I]"
 msgstr ""
 
 # Create progress dialog
@@ -396,24 +384,12 @@ msgstr ""
 
 # No videos match cleaning criteria
 msgctxt "#32621"
-msgid "Cleaning not required."
-msgstr ""
-
-msgctxt "#32622"
-msgid "Watch some videos or"
-msgstr ""
-
-msgctxt "#32623"
-msgid "adjust your settings."
+msgid "Cleaning not required. Watch some videos or adjust your settings."
 msgstr ""
 
 # Cleaning of this video type is not enabled
 msgctxt "#32624"
-msgid "Cleaning {type} is disabled."
-msgstr ""
-
-msgctxt "#32625"
-msgid "Skipping cleaning."
+msgid "Cleaning {type} is disabled. Skipping cleaning."
 msgstr ""
 
 msgctxt "#32626"

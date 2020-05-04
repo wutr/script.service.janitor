@@ -290,15 +290,7 @@ msgstr "Schoonmaken is niet nodig."
 
 msgctxt "#32521"
 msgid "The destination folder is not set up."
-msgstr "De doelmap is niet ingesteld."
-
-msgctxt "#32522"
-msgid "You must first select a holding folder."
-msgstr "Je moet eerst een bewaarmap kiezen."
-
-msgctxt "#32523"
-msgid "Would you like to do this now?"
-msgstr "Wil je dit nu doen?"
+msgstr "De doelmap is niet ingesteld. Je moet eerst een bewaarmap kiezen. Wil je dit nu doen?"
 
 # Tijdelijk, totdat Linux schijfruimtechecks werken
 msgctxt "#32524"
@@ -377,12 +369,8 @@ msgid " "
 msgstr " "
 
 msgctxt "#32616"
-msgid "[B]{amount}[/B] {type} have expired."
-msgstr "[B]{amount}[/B] {type} zijn verlopen."
-
-msgctxt "#32617"
-msgid "Testing for exclusions."
-msgstr "Uitzonderingen controleren."
+msgid "[B]{amount}[/B] {type} have expired. Testing for exclusions.\n[I]{title}[/I]"
+msgstr "[B]{amount}[/B] {type} zijn verlopen. Controleren op uitzonderingen.\n[I]{title}[/I]"
 
 # Create progress dialog
 msgctxt "#32618"
@@ -395,26 +383,15 @@ msgstr "Opschonen wordt gestart."
 
 # No videos match cleaning criteria
 msgctxt "#32621"
-msgid "Cleaning not required."
-msgstr "Opschonen niet nodig."
-
-msgctxt "#32622"
-msgid "Watch some videos or"
-msgstr "Bekijk een video of"
-
-msgctxt "#32623"
-msgid "adjust your settings."
-msgstr "pas je instellingen aan."
+msgid "Cleaning not required. Watch some videos or adjust your settings."
+msgstr "Opschonen niet nodig. Bekijk een video of pas je instellingen aan."
 
 # Cleaning of this video type is not enabled
 msgctxt "#32624"
-msgid "Cleaning {type} is disabled."
-msgstr "Opschonen van {type} is niet actief."
+msgid "Cleaning {type} is disabled. Skipping cleaning."
+msgstr "Opschonen van {type} is niet actief. Opschonen wordt overgeslagen."
 
-msgctxt "#32625"
-msgid "Skipping cleaning."
-msgstr "Opschonen wordt overgeslagen."
-
+msgctxt "#32625
 msgctxt "#32626"
 msgid "movies"
 msgstr "films"
