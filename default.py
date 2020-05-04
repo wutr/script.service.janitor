@@ -336,17 +336,16 @@ class Cleaner(object):
         debug(f"[{self.methods[option]}] Response: {response}")
         result = json.loads(response)
 
-        # Check the results for errors
+        # Check the JSON-RPC response for errors
         try:
             error = result["error"]
             debug(f"An error occurred. {error}")
             return None
         except KeyError as ke:
-            print(ke)
-            #if "error" in ke:
-            #    pass  # no error
-            #else:
-            #    raise
+            if "error" in str(ke):
+                pass  # no error
+            else:
+                raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}")
 
         debug("Building list of expired videos")
         expired_videos = []
