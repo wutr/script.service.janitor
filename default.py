@@ -8,33 +8,15 @@ from reset_exclusions import *
 from utils import *
 from viewer import *
 
+MOVIES = "movies"
+MUSIC_VIDEOS = "musicvideos"
+TVSHOWS = "episodes"
+KNOWN_VIDEO_TYPES = (MOVIES, MUSIC_VIDEOS, TVSHOWS)
 
-class Cleaner(object):
+
+class Database(object):
+    """TODO: Docstring
     """
-    The Cleaner class allows users to clean up their movie, TV show and music video collection by removing watched
-    items. The user can apply a number of conditions to cleaning, such as limiting cleaning to files with a given
-    rating, excluding a particular folder or only cleaning when a particular disk is low on disk space.
-
-    The main method to call is the ``clean_all()`` method. This method will invoke the subsequent checks and (re)move
-    your videos. Upon completion, you will receive a short summary of the cleaning results.
-
-    *Example*
-      ``summary = Cleaner().clean_all()``
-    """
-
-    # Constants to ensure correct (Gotham-compatible) JSON-RPC requests for Kodi
-    MOVIES = "movies"
-    MUSIC_VIDEOS = "musicvideos"
-    TVSHOWS = "episodes"
-    CLEANING_TYPE_MOVE = "0"
-    CLEANING_TYPE_DELETE = "1"
-    DEFAULT_ACTION_CLEAN = "0"
-    DEFAULT_ACTION_LOG = "1"
-
-    STATUS_SUCCESS = 1
-    STATUS_FAILURE = 2
-    STATUS_ABORTED = 3
-
     movie_filter_fields = ["title", "plot", "plotoutline", "tagline", "votes", "rating", "time", "writers",
                            "playcount", "lastplayed", "inprogress", "genre", "country", "year", "director",
                            "actor", "mpaarating", "top250", "studio", "hastrailer", "filename", "path", "set",
@@ -49,7 +31,6 @@ class Cleaner(object):
                                 "lastplayed", "time", "director", "studio", "plot", "dateadded",
                                 "videoresolution", "audiochannels", "videocodec", "audiocodec", "audiolanguage",
                                 "subtitlelanguage", "videoaspect", "playlist"]
-
     supported_filter_fields = {
         TVSHOWS: episode_filter_fields,
         MOVIES: movie_filter_fields,
@@ -65,6 +46,123 @@ class Cleaner(object):
         MOVIES: ["file", "title"],
         MUSIC_VIDEOS: ["file", "artist"]
     }
+
+    def __init__(self):
+        """TODO: Docstring
+        """
+        self.settings = {}
+
+    def prepare_query(self, video_type):
+        """TODO: Docstring
+        :rtype dict:
+        :return the complete JSON-RPC request to be sent
+        """
+        # Always refresh the user's settings before preparing a JSON-RPC query
+        self.settings = load_all()
+
+        # A non-exhaustive list of pre-defined filters to use during JSON-RPC requests
+        # These are possible conditions that must be met before a video can be deleted
+        by_playcount = {"field": "playcount", "operator": "greaterthan", "value": "0"}
+        by_date_played = {"field": "lastplayed", "operator": "notinthelast", "value": f"{self.settings[expire_after]:f}"}
+        by_minimum_rating = {"field": "rating", "operator": "lessthan", "value": f"{self.settings[minimum_rating]:f}"}
+        by_no_rating = {"field": "rating", "operator": "isnot", "value": "0"}
+        by_progress = {"field": "inprogress", "operator": "false", "value": ""}
+        by_exclusion1 = {"field": "path", "operator": "doesnotcontain", "value": self.settings[exclusion1]}
+        by_exclusion2 = {"field": "path", "operator": "doesnotcontain", "value": self.settings[exclusion2]}
+        by_exclusion3 = {"field": "path", "operator": "doesnotcontain", "value": self.settings[exclusion3]}
+        by_exclusion4 = {"field": "path", "operator": "doesnotcontain", "value": self.settings[exclusion4]}
+        by_exclusion5 = {"field": "path", "operator": "doesnotcontain", "value": self.settings[exclusion5]}
+
+        # link settings and filters together
+        settings_and_filters = [
+            (self.settings[enable_expiration], by_date_played),
+            (self.settings[clean_when_low_rated], by_minimum_rating),
+            (self.settings[not_in_progress], by_progress),
+            (self.settings[exclusion_enabled] and self.settings[exclusion1] is not "", by_exclusion1),
+            (self.settings[exclusion_enabled] and self.settings[exclusion2] is not "", by_exclusion2),
+            (self.settings[exclusion_enabled] and self.settings[exclusion3] is not "", by_exclusion3),
+            (self.settings[exclusion_enabled] and self.settings[exclusion4] is not "", by_exclusion4),
+            (self.settings[exclusion_enabled] and self.settings[exclusion5] is not "", by_exclusion5)
+        ]
+
+        # Only check not rated videos if checking for video ratings at all
+        if self.settings[clean_when_low_rated]:
+            settings_and_filters.append((self.settings[ignore_no_rating], by_no_rating))
+
+        enabled_filters = [by_playcount]
+        for setting, filter in settings_and_filters:
+            if setting and filter["field"] in self.supported_filter_fields[video_type]:
+                enabled_filters.append(filter)
+
+        debug(f"[{self.methods[video_type]}] Filters enabled: {enabled_filters}")
+
+        filters = {"and": enabled_filters}
+
+        request = {
+            "jsonrpc": "2.0",
+            "method": self.methods[video_type],
+            "params": {
+                "properties": self.properties[video_type],
+                "filter": filters
+            },
+            "id": 1
+        }
+
+        return request
+
+    @staticmethod
+    def parse_response(result):
+        """TODO: Docstring
+        """
+
+        # Error checking
+        try:
+            error = result["error"]
+            debug(f"An error occurred. {error}", xbmc.LOGERROR)
+            raise StopIteration
+        except KeyError as ke:
+            if "error" in str(ke):
+                pass  # no error
+            else:
+                raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}")
+
+        # Parsing actual response
+        return result["result"]
+
+    def execute_query(self, request, video_type):
+        """TODO: Docstring
+        """
+        rpc_cmd = json.dumps(request)
+        response = xbmc.executeJSONRPC(rpc_cmd)
+        debug(f"[{self.methods[video_type]}] Response: {response}")
+        result = json.loads(response)
+
+        return self.parse_response(result)
+
+
+class Cleaner(object):
+    """
+    The Cleaner class allows users to clean up their movie, TV show and music video collection by removing watched
+    items. The user can apply a number of conditions to cleaning, such as limiting cleaning to files with a given
+    rating, excluding a particular folder or only cleaning when a particular disk is low on disk space.
+
+    The main method to call is the ``clean_all()`` method. This method will invoke the subsequent checks and (re)move
+    your videos. Upon completion, you will receive a short summary of the cleaning results.
+
+    *Example*
+      ``summary = Cleaner().clean_all()``
+    """
+
+    # Constants to ensure correct JSON-RPC requests for Kodi
+    CLEANING_TYPE_MOVE = "0"
+    CLEANING_TYPE_DELETE = "1"
+    DEFAULT_ACTION_CLEAN = "0"
+    DEFAULT_ACTION_LOG = "1"
+
+    STATUS_SUCCESS = 1
+    STATUS_FAILURE = 2
+    STATUS_ABORTED = 3
+
     stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
 
     progress = xbmcgui.DialogProgress()
@@ -75,6 +173,7 @@ class Cleaner(object):
 
     def __init__(self):
         debug(f"{ADDON.getAddonInfo('name')} version {ADDON.getAddonInfo('version')} loaded.")
+        self.db = Database()
 
     def __is_canceled(self):
         """
@@ -112,86 +211,73 @@ class Cleaner(object):
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
         cleaned_files = []
-        type_translation = {self.MOVIES: translate(32626), self.MUSIC_VIDEOS: translate(32627), self.TVSHOWS: translate(32628)}
+        type_translation = {MOVIES: translate(32626), MUSIC_VIDEOS: translate(32627), TVSHOWS: translate(32628)}
 
         if not self.silent:
             # Cleaning <video type>
             self.progress.update(0, translate(32629).format(type=type_translation[video_type]))
             self.monitor.waitForAbort(1)
 
-        if video_type == self.TVSHOWS:
-            clean_this_video_type = get_setting(clean_tv_shows)
-        elif video_type == self.MOVIES:
-            clean_this_video_type = get_setting(clean_movies)
-        elif video_type == self.MUSIC_VIDEOS:
-            clean_this_video_type = get_setting(clean_music_videos)
-        else:
-            debug("Incorrect video type specified: {0}".format(video_type), xbmc.LOGERROR)
-            return [], 0, self.STATUS_FAILURE
-
         # Reset counters
         progress_percent = 0
         count = 0
-        increment = 0
 
-        if clean_this_video_type:
-            for filename, title in self.get_expired_videos(video_type):
-                if not self.__is_canceled():
-                    unstacked_path = self.unstack(filename)
-                    if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
-                        if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
-                            # No destination set, prompt user to set one now
-                            if get_setting(holding_folder) == "":
-                                if xbmcgui.Dialog().yesno(ADDON_NAME, translate(32521)):
-                                    xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
-                                self.exit_status = self.STATUS_ABORTED
-                                break
-                            if get_setting(create_subdirs):
-                                title = re.sub(r"[\\/:*?\"<>|]+", "_", title)
-                                new_path = os.path.join(get_setting(holding_folder), title)
+        for filename, title in self.get_expired_videos(video_type):
+            if not self.__is_canceled():
+                unstacked_path = self.unstack(filename)
+                if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
+                    if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
+                        # No destination set, prompt user to set one now
+                        if get_setting(holding_folder) == "":
+                            if xbmcgui.Dialog().yesno(ADDON_NAME, translate(32521)):
+                                xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
+                            self.exit_status = self.STATUS_ABORTED
+                            break
+                        if get_setting(create_subdirs):
+                            title = re.sub(r"[\\/:*?\"<>|]+", "_", title)
+                            new_path = os.path.join(get_setting(holding_folder), title)
+                        else:
+                            new_path = get_setting(holding_folder)
+                        move_result = self.move_file(filename, new_path)
+                        if move_result == 1:
+                            debug("File(s) moved successfully.")
+                            count += 1
+                            if len(unstacked_path) > 1:
+                                cleaned_files.extend(unstacked_path)
                             else:
-                                new_path = get_setting(holding_folder)
-                            move_result = self.move_file(filename, new_path)
-                            if move_result == 1:
-                                debug("File(s) moved successfully.")
-                                count += 1
-                                if len(unstacked_path) > 1:
-                                    cleaned_files.extend(unstacked_path)
-                                else:
-                                    cleaned_files.append(filename)
-                                self.clean_related_files(filename, new_path)
-                                self.delete_empty_folders(os.path.dirname(filename))
-                            elif move_result == -1:
-                                debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
-                                # TODO: Fix this dialog now that the first line can span multiple lines
-                                xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
-                        elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
-                            if self.delete_file(filename):
-                                debug("File(s) deleted successfully.")
-                                count += 1
-                                if len(unstacked_path) > 1:
-                                    cleaned_files.extend(unstacked_path)
-                                else:
-                                    cleaned_files.append(filename)
-                                self.clean_related_files(filename)
-                                self.delete_empty_folders(os.path.dirname(filename))
-                    else:
-                        debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGNOTICE)
-
-                    if not self.silent:
-                        debug(f"Found {self.total_expired} videos that may need cleaning.")
-                        try:
-                            # TODO: Incorporate number of video types being cleaned into the calculation
-                            progress_percent += 1 / self.total_expired * 100
-                        except ZeroDivisionError:
-                            progress_percent += 0  # No videos found that need cleaning
-                        #debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
-                        self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
-                        self.monitor.waitForAbort(2)
+                                cleaned_files.append(filename)
+                            self.clean_related_files(filename, new_path)
+                            self.delete_empty_folders(os.path.dirname(filename))
+                        elif move_result == -1:
+                            debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
+                            # TODO: Fix this dialog now that the first line can span multiple lines
+                            xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
+                    elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
+                        if self.delete_file(filename):
+                            debug("File(s) deleted successfully.")
+                            count += 1
+                            if len(unstacked_path) > 1:
+                                cleaned_files.extend(unstacked_path)
+                            else:
+                                cleaned_files.append(filename)
+                            self.clean_related_files(filename)
+                            self.delete_empty_folders(os.path.dirname(filename))
                 else:
-                    debug(f"We had {self.total_expired - count} {type_translation[video_type]} left to clean.")
+                    debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGNOTICE)
+
+                if not self.silent:
+                    debug(f"Found {self.total_expired} videos that may need cleaning.")
+                    try:
+                        # TODO: Incorporate number of video types being cleaned into the calculation
+                        progress_percent += 1 / self.total_expired * 100
+                    except ZeroDivisionError:
+                        progress_percent += 0  # No videos found that need cleaning
+                    # debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
+                    self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
+                    self.monitor.waitForAbort(2)
+            else:
+                debug(f"We had {self.total_expired - count} {type_translation[video_type]} left to clean.")
         else:
-            debug(f"Cleaning of {video_type} is disabled. Skipping.")
             if not self.silent:
                 self.progress.update(0, translate(32624).format(type=type_translation[video_type]))
                 self.monitor.waitForAbort(2)
@@ -202,7 +288,7 @@ class Cleaner(object):
         """
         Clean up any watched videos in the Kodi library, satisfying any conditions set via the addon settings.
 
-        :rtype: (unicode, int)
+        :rtype: (dict, int)
         :return: A single-line (localized) summary of the cleaning results to be used for a notification, plus a status.
         """
         debug("Starting cleaning routine.")
@@ -215,10 +301,10 @@ class Cleaner(object):
         cleaning_results, cleaned_files = [], []
         if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and disk_space_low()):
             if not self.silent:
-                self.progress.create(ADDON_NAME)
+                self.progress.create(ADDON_NAME)  # TODO: Make this a standalone dialog for each video type
                 self.progress.update(0)
                 self.monitor.waitForAbort(2)
-            for video_type in [self.MOVIES, self.MUSIC_VIDEOS, self.TVSHOWS]:
+            for video_type in KNOWN_VIDEO_TYPES:
                 if not self.__is_canceled():
                     cleaned_files, count, status = self.clean(video_type)
                     if count > 0:
@@ -243,7 +329,8 @@ class Cleaner(object):
 
         return results, self.exit_status
 
-    def summarize(self, details):
+    @staticmethod
+    def summarize(details):
         """
         Create a summary from the cleaning results.
 
@@ -255,11 +342,11 @@ class Cleaner(object):
 
         # Localize video types
         for vid_type, amount in details.items():
-            if vid_type is self.MOVIES:
+            if vid_type is MOVIES:
                 video_type = translate(32515)
-            elif vid_type is self.TVSHOWS:
+            elif vid_type is TVSHOWS:
                 video_type = translate(32516)
-            elif vid_type is self.MUSIC_VIDEOS:
+            elif vid_type is MUSIC_VIDEOS:
                 video_type = translate(32517)
             else:
                 video_type = ""
@@ -281,90 +368,36 @@ class Cleaner(object):
         :return: A list of expired videos, along with a number of extra attributes specific to the video type.
         """
 
-        # A non-exhaustive list of pre-defined filters to use during JSON-RPC requests
-        # These are possible conditions that must be met before a video can be deleted
-        by_playcount = {"field": "playcount", "operator": "greaterthan", "value": "0"}
-        by_date_played = {"field": "lastplayed", "operator": "notinthelast", "value": "{0:f}".format(get_setting(expire_after))}
-        by_minimum_rating = {"field": "rating", "operator": "lessthan", "value": "{0:f}".format(get_setting(minimum_rating))}
-        by_no_rating = {"field": "rating", "operator": "isnot", "value": "0"}
-        by_progress = {"field": "inprogress", "operator": "false", "value": ""}
-        by_exclusion1 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion1)}
-        by_exclusion2 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion2)}
-        by_exclusion3 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion3)}
-        by_exclusion4 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion4)}
-        by_exclusion5 = {"field": "path", "operator": "doesnotcontain", "value": get_setting(exclusion5)}
+        video_types = (TVSHOWS, MOVIES, MUSIC_VIDEOS)
+        setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
 
-        # link settings and filters together
-        settings_and_filters = [
-            (get_setting(enable_expiration), by_date_played),
-            (get_setting(clean_when_low_rated), by_minimum_rating),
-            (get_setting(not_in_progress), by_progress),
-            (get_setting(exclusion_enabled) and get_setting(exclusion1) is not "", by_exclusion1),
-            (get_setting(exclusion_enabled) and get_setting(exclusion2) is not "", by_exclusion2),
-            (get_setting(exclusion_enabled) and get_setting(exclusion3) is not "", by_exclusion3),
-            (get_setting(exclusion_enabled) and get_setting(exclusion4) is not "", by_exclusion4),
-            (get_setting(exclusion_enabled) and get_setting(exclusion5) is not "", by_exclusion5)
-        ]
+        for type, setting in zip(video_types, setting_types):
+            if type == video_type and get_setting(setting):
+                # Do the actual work here
+                query = self.db.prepare_query(video_type)
+                result = self.db.execute_query(query, video_type)
+                totals = int(result["limits"]["total"])
 
-        # Only check not rated videos if checking for video ratings at all
-        if get_setting(clean_when_low_rated):
-            settings_and_filters.append((get_setting(ignore_no_rating), by_no_rating))
+                try:
+                    debug(f"Found {totals} watched {video_type} matching your conditions")
+                    debug(f"JSON Response: {result}")
+                    for video in result[video_type]:
+                        # Gather all properties and add it to this video's information
+                        temp = []
+                        for p in self.db.properties[video_type]:
+                            temp.append(video[p])
+                        yield temp
+                except KeyError as ke:
+                    if video_type in str(ke):
+                        pass  # no expired videos found
+                    else:
+                        raise KeyError(f"Could not find key {ke} in response.")
+                finally:
+                    debug("Breaking the loop")
+                    break  # Stop looping after the first match for video_type
 
-        enabled_filters = [by_playcount]
-        for s, f in settings_and_filters:
-            if s and f["field"] in self.supported_filter_fields[video_type]:
-                enabled_filters.append(f)
-
-        debug(f"[{self.methods[video_type]}] Filters enabled: {enabled_filters}")
-
-        filters = {"and": enabled_filters}
-
-        request = {
-            "jsonrpc": "2.0",
-            "method": self.methods[video_type],
-            "params": {
-                "properties": self.properties[video_type],
-                "filter": filters
-            },
-            "id": 1
-        }
-
-        rpc_cmd = json.dumps(request)
-        response = xbmc.executeJSONRPC(rpc_cmd)
-        debug(f"[{self.methods[video_type]}] Response: {response}")
-        result = json.loads(response)
-
-        # Check the JSON-RPC response for errors
-        try:
-            error = result["error"]
-            debug(f"An error occurred. {error}", xbmc.LOGERROR)
-            raise StopIteration
-        except KeyError as ke:
-            if "error" in str(ke):
-                pass  # no error
-            else:
-                raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}")
-
-        debug("Building list of expired videos")
-        response = result["result"]
-        self.total_expired = int(response["limits"]["total"])
-
-        try:
-            debug(f"Found {self.total_expired} watched {video_type} matching your conditions")
-            debug(f"JSON Response: {response}")
-            for video in response[video_type]:
-                # Gather all properties and add it to this video's information
-                temp = []
-                for p in self.properties[video_type]:
-                    temp.append(video[p])
-                yield temp
-        except KeyError as ke:
-            if video_type in str(ke):
-                pass  # no expired videos found
-            else:
-                raise KeyError(f"Could not find key {ke} in response.")
-
-    def unstack(self, path):
+    @staticmethod
+    def unstack(path):
         """Unstack path if it is a stacked movie. See http://kodi.wiki/view/File_stacking for more info.
 
         :type path: unicode
