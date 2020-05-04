@@ -71,6 +71,7 @@ class Cleaner(object):
     monitor = xbmc.Monitor()
     silent = True
     exit_status = STATUS_SUCCESS
+    total_expired = 0
 
     def __init__(self):
         debug(f"{ADDON.getAddonInfo('name')} version {ADDON.getAddonInfo('version')} loaded.")
@@ -111,7 +112,6 @@ class Cleaner(object):
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
         cleaned_files = []
-        count = 0
         type_translation = {self.MOVIES: translate(32626), self.MUSIC_VIDEOS: translate(32627), self.TVSHOWS: translate(32628)}
 
         if not self.silent:
@@ -129,15 +129,19 @@ class Cleaner(object):
             debug("Incorrect video type specified: {0}".format(video_type), xbmc.LOGERROR)
             return [], 0, self.STATUS_FAILURE
 
+        # Reset counters
         progress_percent = 0
+        count = 0
+        increment = 0
+        self.total_expired = 0
 
         if clean_this_video_type:
             expired_videos = self.get_expired_videos(video_type)
             if not self.silent:
-                amount = len(expired_videos)
-                debug(f"Found {amount} videos that may need cleaning.")
+                # Assumes total_expired is set after querying the Kodi database via JSON-RPC
+                debug(f"Found {self.total_expired} videos that may need cleaning.")
                 try:
-                    increment = 1.0 / amount
+                    increment = 1.0 / self.total_expired
                 except ZeroDivisionError:
                     pass  # No videos found that need cleaning
 
@@ -185,11 +189,11 @@ class Cleaner(object):
 
                     if not self.silent:
                         progress_percent += increment * 100
-                        debug(f"Progress percent is {progress_percent}, amount is {amount} and increment is {increment}")
-                        self.progress.update(int(progress_percent), translate(32616).format(amount=amount, type=type_translation[video_type], title=title))
+                        debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
+                        self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
                         self.monitor.waitForAbort(2)
                 else:
-                    debug(f"We had {amount - count} {type_translation[video_type]} left to clean.")
+                    debug(f"We had {self.total_expired - count} {type_translation[video_type]} left to clean.")
         else:
             debug(f"Cleaning of {video_type} is disabled. Skipping.")
             if not self.silent:
@@ -269,14 +273,14 @@ class Cleaner(object):
         # strip the comma and space from the last iteration and add the localized suffix
         return f"{summary.rstrip(', ')}{translate(32518)}" if summary else ""
 
-    def get_expired_videos(self, option):
+    def get_expired_videos(self, video_type):
         """
         Find videos in the Kodi library that have been watched.
 
         Respects any other conditions user enables in the addon's settings.
 
-        :type option: unicode
-        :param option: The type of videos to find (one of the globals MOVIES, MUSIC_VIDEOS or TVSHOWS).
+        :type video_type: unicode
+        :param video_type: The type of videos to find (one of the globals MOVIES, MUSIC_VIDEOS or TVSHOWS).
         :rtype: list
         :return: A list of expired videos, along with a number of extra attributes specific to the video type.
         """
@@ -312,18 +316,18 @@ class Cleaner(object):
 
         enabled_filters = [by_playcount]
         for s, f in settings_and_filters:
-            if s and f["field"] in self.supported_filter_fields[option]:
+            if s and f["field"] in self.supported_filter_fields[video_type]:
                 enabled_filters.append(f)
 
-        debug(f"[{self.methods[option]}] Filters enabled: {enabled_filters}")
+        debug(f"[{self.methods[video_type]}] Filters enabled: {enabled_filters}")
 
         filters = {"and": enabled_filters}
 
         request = {
             "jsonrpc": "2.0",
-            "method": self.methods[option],
+            "method": self.methods[video_type],
             "params": {
-                "properties": self.properties[option],
+                "properties": self.properties[video_type],
                 "filter": filters
             },
             "id": 1
@@ -331,14 +335,14 @@ class Cleaner(object):
 
         rpc_cmd = json.dumps(request)
         response = xbmc.executeJSONRPC(rpc_cmd)
-        debug(f"[{self.methods[option]}] Response: {response}")
+        debug(f"[{self.methods[video_type]}] Response: {response}")
         result = json.loads(response)
 
         # Check the JSON-RPC response for errors
         try:
             error = result["error"]
-            debug(f"An error occurred. {error}")
-            return None
+            debug(f"An error occurred. {error}", xbmc.LOGERROR)
+            raise StopIteration
         except KeyError as ke:
             if "error" in str(ke):
                 pass  # no error
@@ -348,25 +352,22 @@ class Cleaner(object):
         debug("Building list of expired videos")
         expired_videos = []
         response = result["result"]
+        self.total_expired = int(response["limits"]["total"])
+
         try:
-            debug("Found {0:d} watched {1} matching your conditions".format(response["limits"]["total"], option))
+            debug(f"Found {self.total_expired} watched {video_type} matching your conditions")
             debug(f"JSON Response: {response}")
-            for video in response[option]:
+            for video in response[video_type]:
                 # Gather all properties and add it to this video's information
                 temp = []
-                for p in self.properties[option]:
+                for p in self.properties[video_type]:
                     temp.append(video[p])
-                expired_videos.append(temp)
+                yield temp
         except KeyError as ke:
-            if option in ke:
+            if video_type in str(ke):
                 pass  # no expired videos found
             else:
-                debug(f"KeyError: {ke} not found", xbmc.LOGWARNING)
-                debug(f"{response}", xbmc.LOGWARNING)
-                raise
-        finally:
-            debug(f"Expired videos: {expired_videos}")
-            return expired_videos
+                raise KeyError(f"Could not find key {ke} in response.")
 
     def unstack(self, path):
         """Unstack path if it is a stacked movie. See http://kodi.wiki/view/File_stacking for more info.
