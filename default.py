@@ -140,7 +140,7 @@ class Database(object):
         return self.parse_response(result)
 
 
-class Cleaner(object):
+class Janitor(object):
     """
     The Cleaner class allows users to clean up their movie, TV show and music video collection by removing watched
     items. The user can apply a number of conditions to cleaning, such as limiting cleaning to files with a given
@@ -656,18 +656,18 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == "reset":
         reset_exclusions()
     else:
-        cleaner = Cleaner()
-        if get_setting(default_action) == cleaner.DEFAULT_ACTION_LOG:
+        janitor = Janitor()
+        if get_setting(default_action) == janitor.DEFAULT_ACTION_LOG:
             xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
         else:
-            cleaner.show_progress()
-            results, return_status = cleaner.clean_all()
+            janitor.show_progress()
+            results, return_status = janitor.clean_all()
             if any(results.values()):
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
-                if xbmcgui.Dialog().yesno(translate(32514), translate(32519).format(summary=cleaner.summarize(results))):
+                if xbmcgui.Dialog().yesno(translate(32514), translate(32519).format(summary=janitor.summarize(results))):
                     xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
-            elif return_status == cleaner.STATUS_ABORTED:
+            elif return_status == janitor.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder
                 pass
             else:
