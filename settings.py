@@ -1,8 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import utils
 from xbmc import translatePath
+
+import utils
 
 # Exhaustive list of constants as used by the addon's settings
 service_enabled = "service_enabled"
@@ -78,8 +79,7 @@ def get_setting(setting):
     elif setting in paths:
         return utils.anonymize_path(str(translatePath(utils.ADDON.getSetting(setting))))
     else:
-        raise ValueError("Failed loading {0} value. Type {1} cannot be handled."
-                         .format(setting, type(setting)))
+        raise ValueError(f"Failed loading {setting} value. Type {type(setting)} cannot be handled.")
 
 
 def load_all():
