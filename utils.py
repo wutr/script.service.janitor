@@ -39,31 +39,29 @@ class Log(object):
         :type data: list
         :param data: A list of strings to prepend to the log file.
         """
-        try:
-            debug("Prepending the log file with new data.")
-            debug("Backing up current log.")
-            with open(self.logpath, "a+") as f:  # use append mode to make sure it is created if non-existent
-                previous_data = f.read()
-        except (IOError, OSError) as err:
-            debug(f"{err}", xbmc.LOGERROR)
-        else:
+        if data:
             try:
-                debug("Writing new log data.")
-                with open(self.logpath, "w") as f:
-                    if data:
-                        f.write(f"[B][{time.strftime('%d/%m/%Y  -  %H:%M:%S')}][/B]\n")
-                        for line in data:
-                            line = line.encode("utf-8")
-                            f.write(f" - {line}\n")
-                        f.write("\n")
-                        debug("New data written to log file.")
-                    else:
-                        debug("No data to write. Stopping.")
-
-                    debug("Appending previous log file contents.")
-                    f.writelines(previous_data.encode())
+                debug("Prepending the log file with new data.")
+                debug("Backing up current log.")
+                with open(self.logpath, "a+") as f:  # use append mode to make sure it is created if non-existent
+                    previous_data = f.read()
             except (IOError, OSError) as err:
                 debug(f"{err}", xbmc.LOGERROR)
+            else:
+                try:
+                    with open(self.logpath, "w") as f:
+                        debug("Writing new log data.")
+                        f.write(f"[B][{time.strftime('%d/%m/%Y  -  %H:%M:%S')}][/B]\n")
+                        for line in data:
+                            f.write(f" - {line.encode()}\n")
+                        f.write("\n")
+
+                        debug("Appending previous log file contents.")
+                        f.writelines(previous_data.encode())
+                except (IOError, OSError) as err:
+                    debug(f"{err}", xbmc.LOGERROR)
+        else:
+            debug("Nothing to log.")
 
     def trim(self, lines_to_keep=25):
         """
