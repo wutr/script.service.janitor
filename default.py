@@ -414,7 +414,7 @@ class Janitor(object):
             debug(f"Unstacking {path} is not needed.")
             return [path]
 
-    def get_stack_bare_title(self, filenames):
+    def get_common_prefix(self, filenames):
         """Find the common title of files part of a stack, minus the volume and file extension.
 
         Example:
@@ -423,14 +423,15 @@ class Janitor(object):
         :type filenames: list
         :param filenames: a list of file names that are part of a stack. Use unstack() to find these file names.
         :rtype: str
-        :return: common title of file names part of a stack
+        :return: common prefix for all stacked movie parts
         """
-        title = os.path.basename(os.path.commonprefix([f for f in filenames]))
-        for e in self.stacking_indicators:
-            if title.endswith(e):
-                title = title[:-len(e)].rstrip("._-")
+        prefix = os.path.basename(os.path.commonprefix([f for f in filenames]))
+        for suffix in self.stacking_indicators:
+            if prefix.endswith(suffix):
+                # Strip stacking indicator and separator
+                prefix = prefix[:-len(suffix)].rstrip("._-")
                 break
-        return title
+        return prefix
 
     def delete_file(self, location):
         """
@@ -537,7 +538,7 @@ class Janitor(object):
             path_list = self.unstack(source)
             path, name = os.path.split(path_list[0])  # Because stacked movies are in the same folder, only check one
             if source.startswith("stack://"):
-                name = self.get_stack_bare_title(path_list)
+                name = self.get_common_prefix(path_list)
             else:
                 name, ext = os.path.splitext(name)
 
