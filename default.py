@@ -313,21 +313,23 @@ class Janitor(object):
             if not self.silent:
                 self.progress.close()
 
-        # Check if we need to perform any post-cleaning operations
-        if cleaning_results:
-            # Write cleaned file names to the log
-            Log().prepend(cleaning_results)
+        self.clean_kodi_library(cleaning_results)
 
-            # Finally clean the library to account for any deleted videos.
-            if get_setting(clean_kodi_library):
-                self.monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
-
-                if xbmc.getCondVisibility("Library.IsScanningVideo"):
-                    debug("The video library is being updated. Skipping library cleanup.", xbmc.LOGWARNING)
-                else:
-                    xbmc.executebuiltin("XBMC.CleanLibrary(video, false)")
+        Log().prepend(cleaning_results)
 
         return results, self.exit_status
+
+    def clean_kodi_library(self, purged_files):
+        # Check if we need to perform any post-cleaning operations
+        if purged_files and get_setting(clean_kodi_library):
+            self.monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
+
+            if xbmc.getCondVisibility("Library.IsScanningVideo"):
+                debug("The video library is being updated. Skipping library cleanup.", xbmc.LOGWARNING)
+            else:
+                xbmc.executebuiltin("XBMC.CleanLibrary(video, false)")
+        else:
+            debug("Cleaning Kodi library not required and/or not enabled.")
 
     @staticmethod
     def summarize(details):
