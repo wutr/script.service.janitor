@@ -111,33 +111,32 @@ class Database(object):
         return request
 
     @staticmethod
-    def parse_response(result):
+    def check_errors(response):
         """TODO: Docstring
         """
+        result = json.loads(response)
 
         # Error checking
         try:
             error = result["error"]
             debug(f"An error occurred. {error}", xbmc.LOGERROR)
-            raise StopIteration
+            raise ValueError(f"[{error['data']['method']}]: {error['data']['stack']['message']}")
         except KeyError as ke:
             if "error" in str(ke):
                 pass  # no error
             else:
-                raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}")
+                raise KeyError(f"Something went wrong while parsing errors from JSON-RPC. I couldn't find {ke}") from ke
 
-        # Parsing actual response
+        # No errors, so return actual response
         return result["result"]
 
-    def execute_query(self, request, video_type):
+    def execute_query(self, query):
         """TODO: Docstring
         """
-        rpc_cmd = json.dumps(request)
-        response = xbmc.executeJSONRPC(rpc_cmd)
-        debug(f"[{self.methods[video_type]}] Response: {response}")
-        result = json.loads(response)
+        response = xbmc.executeJSONRPC(json.dumps(query))
+        debug(f"[{query['method']}] Response: {response}")
 
-        return self.parse_response(result)
+        return self.check_errors(response)
 
 
 class Janitor(object):
@@ -377,7 +376,7 @@ class Janitor(object):
             if type == video_type and get_setting(setting):
                 # Do the actual work here
                 query = self.db.prepare_query(video_type)
-                result = self.db.execute_query(query, video_type)
+                result = self.db.execute_query(query)
                 totals = int(result["limits"]["total"])
 
                 try:
