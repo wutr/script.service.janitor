@@ -178,6 +178,40 @@ class Database(object):
                     debug("Breaking the loop")
                     break  # Stop looping after the first match for video_type
 
+    def get_video_sources(self, limits=None, sort=None):
+        """
+        Retrieve the user configured video sources from Kodi
+
+        To limit or sort the results, you may supply these in the form of a dict.
+        See List.Sort and List.Limits objects on the JSON-RPC API specifications:
+        https://kodi.wiki/view/JSON-RPC_API/
+
+        :param limits: The limits to impose on JSON-RPC
+        :type limits: dict
+        :param sort: The sorting options for JSON-RPC
+        :type sort: dict
+        :return: The user configured video sources
+        :rtype: dict
+        """
+
+        if sort is None:
+            sort = {}
+        if limits is None:
+            limits = {}
+
+        request = {
+            "jsonrpc": "2.0",
+            "method": "Files.GetSources",
+            "params": {
+                "media": "video",
+                "limits": limits,
+                "sort": sort
+            },
+            "id": 1
+        }
+
+        return self.execute_query(request)
+
 
 class Janitor(object):
     """
