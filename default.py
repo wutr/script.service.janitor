@@ -138,6 +138,46 @@ class Database(object):
 
         return self.check_errors(response)
 
+    def get_expired_videos(self, video_type):
+        """
+        Find videos in the Kodi library that have been watched.
+
+        Respects any other conditions user enables in the addon's settings.
+
+        :type video_type: unicode
+        :param video_type: The type of videos to find (one of the globals MOVIES, MUSIC_VIDEOS or TVSHOWS).
+        :rtype: list
+        :return: A list of expired videos, along with a number of extra attributes specific to the video type.
+        """
+
+        video_types = (TVSHOWS, MOVIES, MUSIC_VIDEOS)
+        setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
+
+        for type, setting in zip(video_types, setting_types):
+            if type == video_type and get_setting(setting):
+                # Do the actual work here
+                query = self.prepare_query(video_type)
+                result = self.execute_query(query)
+                totals = int(result["limits"]["total"])
+
+                try:
+                    debug(f"Found {totals} watched {video_type} matching your conditions")
+                    debug(f"JSON Response: {result}")
+                    for video in result[video_type]:
+                        # Gather all properties and add it to this video's information
+                        temp = []
+                        for p in self.properties[video_type]:
+                            temp.append(video[p])
+                        yield temp
+                except KeyError as ke:
+                    if video_type in str(ke):
+                        pass  # no expired videos found
+                    else:
+                        raise KeyError(f"Could not find key {ke} in response.")
+                finally:
+                    debug("Breaking the loop")
+                    break  # Stop looping after the first match for video_type
+
 
 class Janitor(object):
     """
@@ -221,7 +261,7 @@ class Janitor(object):
         progress_percent = 0
         count = 0
 
-        for filename, title in self.get_expired_videos(video_type):
+        for filename, title in self.db.get_expired_videos(video_type):
             if not self.__is_canceled():
                 unstacked_path = self.split_stack(filename)
                 if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
@@ -356,46 +396,6 @@ class Janitor(object):
 
         # strip the comma and space from the last iteration and add the localized suffix
         return f"{summary.rstrip(', ')}{translate(32518)}" if summary else ""
-
-    def get_expired_videos(self, video_type):
-        """
-        Find videos in the Kodi library that have been watched.
-
-        Respects any other conditions user enables in the addon's settings.
-
-        :type video_type: unicode
-        :param video_type: The type of videos to find (one of the globals MOVIES, MUSIC_VIDEOS or TVSHOWS).
-        :rtype: list
-        :return: A list of expired videos, along with a number of extra attributes specific to the video type.
-        """
-
-        video_types = (TVSHOWS, MOVIES, MUSIC_VIDEOS)
-        setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
-
-        for type, setting in zip(video_types, setting_types):
-            if type == video_type and get_setting(setting):
-                # Do the actual work here
-                query = self.db.prepare_query(video_type)
-                result = self.db.execute_query(query)
-                totals = int(result["limits"]["total"])
-
-                try:
-                    debug(f"Found {totals} watched {video_type} matching your conditions")
-                    debug(f"JSON Response: {result}")
-                    for video in result[video_type]:
-                        # Gather all properties and add it to this video's information
-                        temp = []
-                        for p in self.db.properties[video_type]:
-                            temp.append(video[p])
-                        yield temp
-                except KeyError as ke:
-                    if video_type in str(ke):
-                        pass  # no expired videos found
-                    else:
-                        raise KeyError(f"Could not find key {ke} in response.")
-                finally:
-                    debug("Breaking the loop")
-                    break  # Stop looping after the first match for video_type
 
     @staticmethod
     def split_stack(stacked_path):
