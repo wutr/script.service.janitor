@@ -58,7 +58,7 @@ class Database(object):
         :return the complete JSON-RPC request to be sent
         """
         # Always refresh the user's settings before preparing a JSON-RPC query
-        self.settings = load_all()
+        self.settings = reload_preferences()
 
         # A non-exhaustive list of pre-defined filters to use during JSON-RPC requests
         # These are possible conditions that must be met before a video can be deleted
@@ -116,7 +116,6 @@ class Database(object):
         """
         result = json.loads(response)
 
-        # Error checking
         try:
             error = result["error"]
             debug(f"An error occurred. {error}", xbmc.LOGERROR)
@@ -154,7 +153,7 @@ class Database(object):
         setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
 
         for type, setting in zip(video_types, setting_types):
-            if type == video_type and get_setting(setting):
+            if type == video_type and get_value(setting):
                 # Do the actual work here
                 query = self.prepare_query(video_type)
                 result = self.execute_query(query)
@@ -219,11 +218,11 @@ class Janitor(object):
     items. The user can apply a number of conditions to cleaning, such as limiting cleaning to files with a given
     rating, excluding a particular folder or only cleaning when a particular disk is low on disk space.
 
-    The main method to call is the ``clean_all()`` method. This method will invoke the subsequent checks and (re)move
+    The main method to call is the ``clean()`` method. This method will invoke the subsequent checks and (re)move
     your videos. Upon completion, you will receive a short summary of the cleaning results.
 
     *Example*
-      ``summary = Cleaner().clean_all()``
+      ``summary = Cleaner().clean()``
     """
 
     # Constants to ensure correct JSON-RPC requests for Kodi
@@ -248,7 +247,7 @@ class Janitor(object):
         debug(f"{ADDON.getAddonInfo('name')} version {ADDON.getAddonInfo('version')} loaded.")
         self.db = Database()
 
-    def __is_canceled(self):
+    def user_aborted(self):
         """
         Test if the progress dialog has been canceled by the user. If the cleaner was started as a service this will
         always return False
@@ -274,7 +273,7 @@ class Janitor(object):
         """
         self.silent = True
 
-    def clean(self, video_type):
+    def clean_category(self, video_type):
         """
         Clean all watched videos of the provided type.
 
@@ -296,21 +295,21 @@ class Janitor(object):
         count = 0
 
         for filename, title in self.db.get_expired_videos(video_type):
-            if not self.__is_canceled():
+            if not self.user_aborted():
                 unstacked_path = self.split_stack(filename)
-                if xbmcvfs.exists(unstacked_path[0]) and self.has_no_hard_links(filename):
-                    if get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
+                if xbmcvfs.exists(unstacked_path[0]) and self.is_hardlinked(filename):
+                    if get_value(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         # No destination set, prompt user to set one now
-                        if get_setting(holding_folder) == "":
+                        if get_value(holding_folder) == "":
                             if xbmcgui.Dialog().yesno(ADDON_NAME, translate(32521)):
                                 xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
                             self.exit_status = self.STATUS_ABORTED
                             break
-                        if get_setting(create_subdirs):
+                        if get_value(create_subdirs):
                             title = re.sub(r"[\\/:*?\"<>|]+", "_", title)
-                            new_path = os.path.join(get_setting(holding_folder), title)
+                            new_path = os.path.join(get_value(holding_folder), title)
                         else:
-                            new_path = get_setting(holding_folder)
+                            new_path = get_value(holding_folder)
                         move_result = self.move_file(filename, new_path)
                         if move_result == 1:
                             debug("File(s) moved successfully.")
@@ -319,13 +318,13 @@ class Janitor(object):
                                 cleaned_files.extend(unstacked_path)
                             else:
                                 cleaned_files.append(filename)
-                            self.clean_related_files(filename, new_path)
+                            self.clean_extras(filename, new_path)
                             self.delete_empty_folders(os.path.dirname(filename))
                         elif move_result == -1:
                             debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
                             # TODO: Fix this dialog now that the first line can span multiple lines
                             xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
-                    elif get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
+                    elif get_value(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if self.delete_file(filename):
                             debug("File(s) deleted successfully.")
                             count += 1
@@ -333,7 +332,7 @@ class Janitor(object):
                                 cleaned_files.extend(unstacked_path)
                             else:
                                 cleaned_files.append(filename)
-                            self.clean_related_files(filename)
+                            self.clean_extras(filename)
                             self.delete_empty_folders(os.path.dirname(filename))
                 else:
                     debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGNOTICE)
@@ -357,7 +356,7 @@ class Janitor(object):
 
         return cleaned_files, count, self.exit_status
 
-    def clean_all(self):
+    def clean(self):
         """
         Clean up any watched videos in the Kodi library, satisfying any conditions set via the addon settings.
 
@@ -366,35 +365,35 @@ class Janitor(object):
         """
         debug("Starting cleaning routine.")
 
-        if get_setting(clean_when_idle) and xbmc.Player().isPlaying():
+        if get_value(clean_when_idle) and xbmc.Player().isPlaying():
             debug("Kodi is currently playing a file. Skipping cleaning.", xbmc.LOGWARNING)
             return None, self.exit_status
 
         results = {}
         cleaning_results, cleaned_files = [], []
-        if not get_setting(clean_when_low_disk_space) or (get_setting(clean_when_low_disk_space) and disk_space_low()):
+        if not get_value(clean_when_low_disk_space) or (get_value(clean_when_low_disk_space) and disk_space_low()):
             if not self.silent:
                 self.progress.create(ADDON_NAME)  # TODO: Make this a standalone dialog for each video type
                 self.progress.update(0)
                 self.monitor.waitForAbort(2)
             for video_type in KNOWN_VIDEO_TYPES:
-                if not self.__is_canceled():
-                    cleaned_files, count, status = self.clean(video_type)
+                if not self.user_aborted():
+                    cleaned_files, count, status = self.clean_category(video_type)
                     if count > 0:
                         cleaning_results.extend(cleaned_files)
                         results[video_type] = count
             if not self.silent:
                 self.progress.close()
 
-        self.clean_kodi_library(cleaning_results)
+        self.clean_library(cleaning_results)
 
         Log().prepend(cleaning_results)
 
         return results, self.exit_status
 
-    def clean_kodi_library(self, purged_files):
+    def clean_library(self, purged_files):
         # Check if we need to perform any post-cleaning operations
-        if purged_files and get_setting(clean_kodi_library):
+        if purged_files and get_value(clean_library):
             self.monitor.waitForAbort(2)  # Sleep 2 seconds to make sure file I/O is done.
 
             if xbmc.getCondVisibility("Library.IsScanningVideo"):
@@ -405,7 +404,7 @@ class Janitor(object):
             debug("Cleaning Kodi library not required and/or not enabled.")
 
     @staticmethod
-    def summarize(details):
+    def get_cleaning_results(details):
         """
         Create a summary from the cleaning results.
 
@@ -501,13 +500,13 @@ class Janitor(object):
         :rtype: bool
         :return: True if the folder was deleted successfully, False otherwise.
         """
-        if not get_setting(delete_folders):
+        if not get_value(delete_folders):
             debug("Deleting of empty folders is disabled.")
             return False
 
         folder = self.split_stack(location)[0]  # Stacked paths should have the same parent, use any
         debug(f"Checking if {folder} is empty")
-        ignored_file_types = [file_ext.strip() for file_ext in get_setting(ignore_extensions).split(",")]
+        ignored_file_types = [file_ext.strip() for file_ext in get_value(ignore_extensions).split(",")]
         debug(f"Ignoring file types {ignored_file_types}")
 
         subfolders, files = xbmcvfs.listdir(folder)
@@ -548,7 +547,7 @@ class Janitor(object):
             debug("Directory is not empty and will not be removed")
             return False
 
-    def clean_related_files(self, source, dest_folder=None):
+    def clean_extras(self, source, dest_folder=None):
         """Clean files related to another file based on the user's preferences.
 
         Related files are files that only differ by extension, or that share a prefix in case of stacked movies.
@@ -560,7 +559,7 @@ class Janitor(object):
         :type dest_folder: unicode
         :param dest_folder: (Optional) The folder where related files should be moved to. Not needed when deleting.
         """
-        if get_setting(clean_related):
+        if get_value(clean_related):
             debug("Cleaning related files.")
 
             path_list = self.split_stack(source)
@@ -575,11 +574,11 @@ class Janitor(object):
                 if extra_file.startswith(name):
                     debug(f"{extra_file} starts with {name}.")
                     extra_file_path = os.path.join(path, extra_file)
-                    if get_setting(cleaning_type) == self.CLEANING_TYPE_DELETE:
+                    if get_value(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if extra_file_path not in path_list:
                             debug(f"Deleting {extra_file_path}.")
                             xbmcvfs.delete(extra_file_path)
-                    elif get_setting(cleaning_type) == self.CLEANING_TYPE_MOVE:
+                    elif get_value(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         new_extra_path = os.path.join(dest_folder, os.path.basename(extra_file))
                         if new_extra_path not in path_list:
                             debug(f"Moving {extra_file_path} to {new_extra_path}.")
@@ -661,7 +660,7 @@ class Janitor(object):
 
         return 1 if len(paths) == files_moved_successfully else -1
 
-    def has_no_hard_links(self, filename):
+    def is_hardlinked(self, filename):
         """
         Tests the provided filename for hard links and only returns True if the number of hard links is exactly 1.
 
@@ -670,7 +669,7 @@ class Janitor(object):
         :return: True if the number of hard links equals 1, False otherwise.
         :rtype: bool
         """
-        if get_setting(keep_hard_linked):
+        if get_value(keep_hard_linked):
             debug("Making sure the number of hard links is exactly one.")
             is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.split_stack(filename))))
             debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
@@ -688,15 +687,15 @@ if __name__ == "__main__":
         reset_exclusions()
     else:
         janitor = Janitor()
-        if get_setting(default_action) == janitor.DEFAULT_ACTION_LOG:
+        if get_value(default_action) == janitor.DEFAULT_ACTION_LOG:
             xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
         else:
             janitor.show_progress()
-            results, return_status = janitor.clean_all()
+            results, return_status = janitor.clean()
             if any(results.values()):
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
-                if xbmcgui.Dialog().yesno(translate(32514), translate(32519).format(summary=janitor.summarize(results))):
+                if xbmcgui.Dialog().yesno(translate(32514), translate(32519).format(summary=janitor.get_cleaning_results(results))):
                     xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
             elif return_status == janitor.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder

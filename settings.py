@@ -61,7 +61,7 @@ paths = [disk_space_check_path, holding_folder, create_subdirs, exclusion1, excl
          exclusion5]
 
 
-def get_setting(setting):
+def get_value(setting):
     """
     Get the value for a specified setting.
 
@@ -82,7 +82,7 @@ def get_setting(setting):
         raise ValueError(f"Failed loading {setting} value. Type {type(setting)} cannot be handled.")
 
 
-def load_all():
+def reload_preferences():
     """
     Get the values for all settings.
 
@@ -93,5 +93,5 @@ def load_all():
     """
     settings = dict()
     for s in bools + strings + numbers + paths:
-        settings[s] = get_setting(s)
+        settings[s] = get_value(s)
     return settings
