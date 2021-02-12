@@ -17,18 +17,18 @@ def autostart():
     delayed_completed = False
 
     while not janitor.monitor.abortRequested():
-        if get_setting(service_enabled):
-            scan_interval_ticker = get_setting(scan_interval) * 60 / service_sleep
-            delayed_start_ticker = get_setting(delayed_start) * 60 / service_sleep
+        if get_value(service_enabled):
+            scan_interval_ticker = get_value(scan_interval) * 60 / service_sleep
+            delayed_start_ticker = get_value(delayed_start) * 60 / service_sleep
 
             if delayed_completed and ticker >= scan_interval_ticker:
-                results, _ = janitor.clean_all()
-                notify(janitor.summarize(results))
+                results, _ = janitor.clean()
+                notify(janitor.get_cleaning_results(results))
                 ticker = 0
             elif not delayed_completed and ticker >= delayed_start_ticker:
                 delayed_completed = True
-                results, _ = janitor.clean_all()
-                notify(janitor.summarize(results))
+                results, _ = janitor.clean()
+                notify(janitor.get_cleaning_results(results))
                 ticker = 0
 
             janitor.monitor.waitForAbort(service_sleep)

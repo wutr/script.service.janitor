@@ -225,7 +225,7 @@ def disk_space_low():
     :rtype: bool
     :return: True if disk space is below threshold (set through addon settings), False otherwise.
     """
-    return get_free_disk_space(get_setting(disk_space_check_path)) <= get_setting(disk_space_threshold)
+    return get_free_disk_space(get_value(disk_space_check_path)) <= get_value(disk_space_threshold)
 
 
 def translate(msg_id):
@@ -257,7 +257,7 @@ def notify(message, duration=5000, image=ADDON_ICON, level=xbmc.LOGDEBUG, sound=
     """
     if message:
         debug(message, level)
-        if get_setting(notifications_enabled) and not (get_setting(notify_when_idle) and xbmc.Player().isPlaying()):
+        if get_value(notifications_enabled) and not (get_value(notify_when_idle) and xbmc.Player().isPlaying()):
             xbmcgui.Dialog().notification(ADDON_NAME.encode(), message.encode(), image.encode(), duration, sound)
 
 
@@ -270,6 +270,6 @@ def debug(message, level=xbmc.LOGDEBUG):
     :type level: int
     :param level: (Optional) the log level (supported values are found at xbmc.LOG...)
     """
-    if get_setting(debugging_enabled):
+    if get_value(debugging_enabled):
         for line in message.splitlines():
             xbmc.log(msg=f"{ADDON_NAME}: {line}", level=level)

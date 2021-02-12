@@ -149,6 +149,8 @@ class Database(object):
         :return: A list of expired videos, along with a number of extra attributes specific to the video type.
         """
 
+        # TODO: split up this method into a pure database query and let the Janitor class handle the rest
+
         video_types = (TVSHOWS, MOVIES, MUSIC_VIDEOS)
         setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
 
