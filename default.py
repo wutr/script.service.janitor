@@ -283,6 +283,67 @@ class Janitor(object):
         """
         self.silent = True
 
+    def process_file(self, unstacked_path, file_name, title):
+        """Handle the cleaning of a video file, either via deletion or moving to another location
+
+        :param unstacked_path:
+        :type unstacked_path:
+        :param file_name:
+        :type file_name:
+        :param title:
+        :type title:
+        :return:
+        :rtype:
+        """
+        count, cleaned_files = 0, []
+        if get_value(cleaning_type) == self.CLEANING_TYPE_MOVE:
+            # No destination set, prompt user to set one now
+            if get_value(holding_folder) == "":
+                if Dialog().yesno(ADDON_NAME, translate(32521)):
+                    xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
+                    self.exit_status = self.STATUS_ABORTED
+                else:
+                    self.exit_status = self.STATUS_FAILURE
+                return cleaned_files
+            if get_value(create_subdirs):
+                title = re.sub(r"[\\/:*?\"<>|]+", "_", title)
+                new_path = os.path.join(get_value(holding_folder), title)
+            else:
+                new_path = get_value(holding_folder)
+            if self.move_file(file_name, new_path):
+                debug("File(s) moved successfully.")
+                count += 1
+                if len(unstacked_path) > 1:
+                    cleaned_files.extend(unstacked_path)
+                else:
+                    cleaned_files.append(file_name)
+                self.clean_extras(file_name, new_path)
+                self.delete_empty_folders(os.path.dirname(file_name))
+                self.exit_status = self.STATUS_SUCCESS
+                return cleaned_files
+            else:
+                debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
+                # TODO: Fix this dialog now that the first line can span multiple lines
+                Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
+                self.exit_status = self.STATUS_FAILURE
+                return cleaned_files
+        elif get_value(cleaning_type) == self.CLEANING_TYPE_DELETE:
+            if self.delete_file(file_name):
+                debug("File(s) deleted successfully.")
+                count += 1
+                if len(unstacked_path) > 1:
+                    cleaned_files.extend(unstacked_path)
+                else:
+                    cleaned_files.append(file_name)
+                self.clean_extras(file_name)
+                self.delete_empty_folders(os.path.dirname(file_name))
+                self.exit_status = self.STATUS_SUCCESS
+            else:
+                debug("Errors occurred during file deletion", xbmc.LOGWARNING)
+                self.exit_status = self.STATUS_FAILURE
+
+            return cleaned_files
+
     def clean_category(self, video_type):
         """
         Clean all watched videos of the provided type.
@@ -292,7 +353,6 @@ class Janitor(object):
         :rtype: (list, int, int)
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
-        cleaned_files = []
         type_translation = {MOVIES: translate(32626), MUSIC_VIDEOS: translate(32627), TVSHOWS: translate(32628)}
 
         if not self.silent:
@@ -301,49 +361,18 @@ class Janitor(object):
             self.monitor.waitForAbort(1)
 
         # Reset counters
+        cleaned_files = []
         progress_percent = 0
         count = 0
 
         for filename, title in self.db.get_expired_videos(video_type):
+            # Check at the beginning of each loop if the user pressed cancel
+            # We do not want to cancel cleaning in the middle of a cycle to prevent issues with leftovers
             if not self.user_aborted():
                 unstacked_path = self.split_stack(filename)
-                if xbmcvfs.exists(unstacked_path[0]) and self.is_hardlinked(filename):
-                    if get_value(cleaning_type) == self.CLEANING_TYPE_MOVE:
-                        # No destination set, prompt user to set one now
-                        if get_value(holding_folder) == "":
-                            if Dialog().yesno(ADDON_NAME, translate(32521)):
-                                xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
-                            self.exit_status = self.STATUS_ABORTED
-                            break
-                        if get_value(create_subdirs):
-                            title = re.sub(r"[\\/:*?\"<>|]+", "_", title)
-                            new_path = os.path.join(get_value(holding_folder), title)
-                        else:
-                            new_path = get_value(holding_folder)
-                        move_result = self.move_file(filename, new_path)
-                        if move_result == 1:
-                            debug("File(s) moved successfully.")
-                            count += 1
-                            if len(unstacked_path) > 1:
-                                cleaned_files.extend(unstacked_path)
-                            else:
-                                cleaned_files.append(filename)
-                            self.clean_extras(filename, new_path)
-                            self.delete_empty_folders(os.path.dirname(filename))
-                        elif move_result == -1:
-                            debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
-                            # TODO: Fix this dialog now that the first line can span multiple lines
-                            Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
-                    elif get_value(cleaning_type) == self.CLEANING_TYPE_DELETE:
-                        if self.delete_file(filename):
-                            debug("File(s) deleted successfully.")
-                            count += 1
-                            if len(unstacked_path) > 1:
-                                cleaned_files.extend(unstacked_path)
-                            else:
-                                cleaned_files.append(filename)
-                            self.clean_extras(filename)
-                            self.delete_empty_folders(os.path.dirname(filename))
+                if xbmcvfs.exists(unstacked_path[0]) and not self.is_hardlinked(filename):
+                    cleaned_files = self.process_file(unstacked_path, filename, title)
+                    count += len(cleaned_files)
                 else:
                     debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGWARNING)
 
@@ -607,8 +636,8 @@ class Janitor(object):
         :param source: the source path (absolute)
         :type dest_folder: unicode
         :param dest_folder: the destination path (absolute)
-        :rtype: int
-        :return: 1 if (all stacked) files were moved, 0 if not, -1 if errors occurred
+        :rtype: bool
+        :return: True if (all stacked) files were moved, False otherwise
         """
         paths = self.split_stack(source)
         files_moved_successfully = 0
@@ -622,7 +651,7 @@ class Janitor(object):
                         debug(f"Created destination {dest_folder}.")
                     else:
                         debug(f"Destination {dest_folder} could not be created.", xbmc.LOGERROR)
-                        return -1
+                        return False
 
                 new_path = os.path.join(dest_folder, os.path.basename(p))
 
@@ -637,7 +666,7 @@ class Janitor(object):
                         if bool(xbmcvfs.delete(new_path) and bool(xbmcvfs.rename(p, new_path))):
                             files_moved_successfully += 1
                         else:
-                            return -1
+                            return False
                     else:
                         debug("This file isn't larger than the existing file. Deleting it instead of moving.")
                         existing_file.close()
@@ -645,7 +674,7 @@ class Janitor(object):
                         if bool(xbmcvfs.delete(p)):
                             files_moved_successfully += 1
                         else:
-                            return -1
+                            return False
                 else:
                     debug(f"Moving {p} to {new_path}.")
                     move_success = bool(xbmcvfs.rename(p, new_path))
@@ -660,7 +689,7 @@ class Janitor(object):
                                 debug("Could not remove source file. Please remove the file manually.", xbmc.LOGWARNING)
                         else:
                             debug("Copying failed, please make sure you have appropriate permissions.", xbmc.LOGFATAL)
-                            return -1
+                            return False
 
                     if move_success or (copy_success and delete_success):
                         files_moved_successfully += 1
@@ -668,7 +697,7 @@ class Janitor(object):
             else:
                 debug(f"File {p} is no longer available.", xbmc.LOGWARNING)
 
-        return 1 if len(paths) == files_moved_successfully else -1
+        return len(paths) == files_moved_successfully
 
     def is_hardlinked(self, filename):
         """
@@ -683,9 +712,10 @@ class Janitor(object):
             debug("Making sure the number of hard links is exactly one.")
             is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.split_stack(filename))))
             debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
+            return True
         else:
             debug("Not checking for hard links.")
-            return True
+            return False
 
 
 if __name__ == "__main__":
