@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import json
-import os
 import sys
 
-import xbmc
-import xbmcvfs
 from xbmcgui import DialogProgress
 
 from util import exclusions
 from util.addon_info import ADDON_NAME, ADDON_ID
-from util.disk import disk_space_low, split_stack
+from util.disk import *
 from util.logging.kodi import debug
 from util.logging.viewer import *
 from util.settings import *
@@ -370,7 +367,7 @@ class Janitor(object):
             # We do not want to cancel cleaning in the middle of a cycle to prevent issues with leftovers
             if not self.user_aborted():
                 unstacked_path = split_stack(filename)
-                if xbmcvfs.exists(unstacked_path[0]) and not self.is_hardlinked(filename):
+                if xbmcvfs.exists(unstacked_path[0]) and not is_hardlinked(filename):
                     cleaned_files = self.process_file(unstacked_path, filename, title)
                     count += len(cleaned_files)
                 else:
@@ -687,24 +684,6 @@ class Janitor(object):
                 debug(f"File {p} is no longer available.", xbmc.LOGWARNING)
 
         return len(paths) == files_moved_successfully
-
-    def is_hardlinked(self, filename):
-        """
-        Tests the provided filename for hard links and only returns True if the number of hard links is exactly 1.
-
-        :param filename: The filename to check for hard links
-        :type filename: str
-        :return: True if the number of hard links equals 1, False otherwise.
-        :rtype: bool
-        """
-        if get_value(keep_hard_linked):
-            debug("Making sure the number of hard links is exactly one.")
-            is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, split_stack(filename))))
-            debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
-            return True
-        else:
-            debug("Not checking for hard links.")
-            return False
 
 
 if __name__ == "__main__":

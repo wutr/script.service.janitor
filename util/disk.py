@@ -102,3 +102,22 @@ def split_stack(stacked_path):
     :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
     """
     return [element.replace("stack://", "") for element in stacked_path.split(" , ")]
+
+
+def is_hardlinked(filename):
+    """
+    Tests the provided filename for hard links and only returns True if the number of hard links is exactly 1.
+
+    :param filename: The filename to check for hard links
+    :type filename: str
+    :return: True if the number of hard links equals 1, False otherwise.
+    :rtype: bool
+    """
+    if get_value(keep_hard_linked):
+        debug("Making sure the number of hard links is exactly one.")
+        is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, split_stack(filename))))
+        debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
+        return True
+    else:
+        debug("Not checking for hard links.")
+        return False
