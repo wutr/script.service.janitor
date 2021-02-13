@@ -7,13 +7,12 @@ import sys
 
 import xbmc
 import xbmcvfs
-from xbmcgui import Dialog, DialogProgress
+from xbmcgui import DialogProgress
 
 from util import exclusions
-from util.addon_info import ADDON, ADDON_NAME, ADDON_ID
+from util.addon_info import ADDON_NAME, ADDON_ID
 from util.disk import disk_space_low
-from util.logging.janitor import Log
-from util.logging.kodi import debug, translate
+from util.logging.kodi import debug
 from util.logging.viewer import *
 from util.settings import *
 
@@ -87,11 +86,11 @@ class Database(object):
             (self.settings[enable_expiration], by_date_played),
             (self.settings[clean_when_low_rated], by_minimum_rating),
             (self.settings[not_in_progress], by_progress),
-            (self.settings[exclusion_enabled] and self.settings[exclusion1] is not "", by_exclusion1),
-            (self.settings[exclusion_enabled] and self.settings[exclusion2] is not "", by_exclusion2),
-            (self.settings[exclusion_enabled] and self.settings[exclusion3] is not "", by_exclusion3),
-            (self.settings[exclusion_enabled] and self.settings[exclusion4] is not "", by_exclusion4),
-            (self.settings[exclusion_enabled] and self.settings[exclusion5] is not "", by_exclusion5)
+            (self.settings[exclusion_enabled] and self.settings[exclusion1] != "", by_exclusion1),
+            (self.settings[exclusion_enabled] and self.settings[exclusion2] != "", by_exclusion2),
+            (self.settings[exclusion_enabled] and self.settings[exclusion3] != "", by_exclusion3),
+            (self.settings[exclusion_enabled] and self.settings[exclusion4] != "", by_exclusion4),
+            (self.settings[exclusion_enabled] and self.settings[exclusion5] != "", by_exclusion5)
         ]
 
         # Only check not rated videos if checking for video ratings at all
