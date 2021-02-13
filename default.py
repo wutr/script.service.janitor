@@ -4,6 +4,7 @@
 import json
 import sys
 
+import xbmcgui
 from xbmcgui import DialogProgress
 
 from util import exclusions
@@ -242,8 +243,6 @@ class Janitor(object):
     STATUS_FAILURE = 2
     STATUS_ABORTED = 3
 
-    stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
-
     progress = DialogProgress()
     monitor = xbmc.Monitor()
     silent = True
@@ -374,6 +373,8 @@ class Janitor(object):
                     debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGWARNING)
 
                 if not self.silent:
+                    # TODO: this now fails because get_expired_videos is a generator
+                    # TODO: maybe we'd better just display the video file that is being cleaned
                     debug(f"Found {self.total_expired} videos that may need cleaning.")
                     try:
                         # TODO: Incorporate number of video types being cleaned into the calculation
@@ -381,6 +382,7 @@ class Janitor(object):
                     except ZeroDivisionError:
                         progress_percent += 0  # No videos found that need cleaning
                     # debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
+                    xbmcgui.DialogProgress()
                     self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
                     self.monitor.waitForAbort(2)
             else:
@@ -466,25 +468,6 @@ class Janitor(object):
         # strip the comma and space from the last iteration and add the localized suffix
         return f"{summary.rstrip(', ')}{translate(32518)}" if summary else ""
 
-    def get_common_prefix(self, filenames):
-        """Find the common title of files part of a stack, minus the volume and file extension.
-
-        Example:
-            ["Movie_Title_part1.ext", "Movie_Title_part2.ext"] yields "Movie_Title"
-
-        :type filenames: list
-        :param filenames: a list of file names that are part of a stack. Use unstack() to find these file names.
-        :rtype: str
-        :return: common prefix for all stacked movie parts
-        """
-        prefix = os.path.basename(os.path.commonprefix([f for f in filenames]))
-        for suffix in self.stacking_indicators:
-            if prefix.endswith(suffix):
-                # Strip stacking indicator and separator
-                prefix = prefix[:-len(suffix)].rstrip("._-")
-                break
-        return prefix
-
     def delete_empty_folders(self, location):
         """
         Delete the folder if it is empty. Presence of custom file extensions can be ignored while scanning.
@@ -564,7 +547,7 @@ class Janitor(object):
             path_list = split_stack(source)
             path, name = os.path.split(path_list[0])  # Because stacked movies are in the same folder, only check one
             if source.startswith("stack://"):
-                name = self.get_common_prefix(path_list)
+                name = get_common_prefix(path_list)
             else:
                 name, ext = os.path.splitext(name)
 

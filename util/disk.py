@@ -220,6 +220,27 @@ def move_file(source, dest_folder):
 
     return len(paths) == files_moved_successfully
 
+
+def get_common_prefix(filenames):
+    """Find the common title of files part of a stack, minus the volume and file extension.
+
+    Example:
+        ["Movie_Title_part1.ext", "Movie_Title_part2.ext"] yields "Movie_Title"
+
+    :type filenames: list
+    :param filenames: a list of file names that are part of a stack. Use unstack() to find these file names.
+    :rtype: str
+    :return: common prefix for all stacked movie parts
+    """
+    prefix = os.path.basename(os.path.commonprefix([f for f in filenames]))
+    for suffix in ["part", "pt", "cd", "dvd", "disk", "disc"]:
+        if prefix.endswith(suffix):
+            # Strip stacking indicator and separator
+            prefix = prefix[:-len(suffix)].rstrip("._-")
+            break
+    return prefix
+
+
 #def file_exists(location):
 #    if stacked_file
 #        unstack
