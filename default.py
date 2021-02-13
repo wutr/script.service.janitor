@@ -2,11 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
 import sys
 
-from reset_exclusions import *
-from utils import *
-from viewer import *
+import xbmc
+import xbmcvfs
+from xbmcgui import Dialog, DialogProgress
+
+from util import exclusions
+from util.addon_info import ADDON, ADDON_NAME, ADDON_ID
+from util.disk import disk_space_low
+from util.logging.janitor import Log
+from util.logging.kodi import debug, translate
+from util.logging.viewer import *
+from util.settings import *
 
 MOVIES = "movies"
 MUSIC_VIDEOS = "musicvideos"
@@ -239,7 +248,7 @@ class Janitor(object):
 
     stacking_indicators = ["part", "pt", "cd", "dvd", "disk", "disc"]
 
-    progress = xbmcgui.DialogProgress()
+    progress = DialogProgress()
     monitor = xbmc.Monitor()
     silent = True
     exit_status = STATUS_SUCCESS
@@ -303,7 +312,7 @@ class Janitor(object):
                     if get_value(cleaning_type) == self.CLEANING_TYPE_MOVE:
                         # No destination set, prompt user to set one now
                         if get_value(holding_folder) == "":
-                            if xbmcgui.Dialog().yesno(ADDON_NAME, translate(32521)):
+                            if Dialog().yesno(ADDON_NAME, translate(32521)):
                                 xbmc.executebuiltin(f"Addon.OpenSettings({ADDON_ID})")
                             self.exit_status = self.STATUS_ABORTED
                             break
@@ -325,7 +334,7 @@ class Janitor(object):
                         elif move_result == -1:
                             debug("Moving errors occurred. Skipping related files and directories.", xbmc.LOGWARNING)
                             # TODO: Fix this dialog now that the first line can span multiple lines
-                            xbmcgui.Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
+                            Dialog().ok(*map(translate, (32611, 32612, 32613, 32614)))
                     elif get_value(cleaning_type) == self.CLEANING_TYPE_DELETE:
                         if self.delete_file(filename):
                             debug("File(s) deleted successfully.")
@@ -337,7 +346,7 @@ class Janitor(object):
                             self.clean_extras(filename)
                             self.delete_empty_folders(os.path.dirname(filename))
                 else:
-                    debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGNOTICE)
+                    debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGWARNING)
 
                 if not self.silent:
                     debug(f"Found {self.total_expired} videos that may need cleaning.")
@@ -686,7 +695,7 @@ if __name__ == "__main__":
         win.doModal()
         del win
     elif len(sys.argv) > 1 and sys.argv[1] == "reset":
-        reset_exclusions()
+        exclusions.reset()
     else:
         janitor = Janitor()
         if get_value(default_action) == janitor.DEFAULT_ACTION_LOG:
@@ -697,10 +706,10 @@ if __name__ == "__main__":
             if any(results.values()):
                 # Videos were cleaned. Ask the user to view the log file.
                 # TODO: Listen to OnCleanFinished notifications and wait before asking to view the log
-                if xbmcgui.Dialog().yesno(translate(32514), translate(32519).format(summary=janitor.get_cleaning_results(results))):
+                if Dialog().yesno(translate(32514), translate(32519).format(summary=janitor.get_cleaning_results(results))):
                     xbmc.executebuiltin(f"RunScript({ADDON_ID}, log)")
             elif return_status == janitor.STATUS_ABORTED:
                 # Do not show cleaning results in case user aborted, e.g. to set holding folder
                 pass
             else:
-                xbmcgui.Dialog().ok(ADDON_NAME, translate(32520))
+                Dialog().ok(ADDON_NAME, translate(32520))

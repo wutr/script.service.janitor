@@ -1,11 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from utils import ADDON, translate
 from xbmcgui import Dialog
 
+from util.addon_info import ADDON
+from util.logging.kodi import translate
 
-def reset_exclusions():
+
+def reset():
     """
     Reset all user-set exclusion paths to blanks.
     :return:
@@ -17,5 +19,6 @@ def reset_exclusions():
         ADDON.setSetting(id="exclusion4", value="")
         ADDON.setSetting(id="exclusion5", value="")
 
+
 if __name__ == "__main__":
-    reset_exclusions()
+    reset()

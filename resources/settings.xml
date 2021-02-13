@@ -16,7 +16,7 @@
         <setting label="32112" id="clean_tv_shows" type="bool" default="false" visible="true" />
         <setting label="32113" id="clean_music_videos" type="bool" default="false" visible="true" />
 
-        <setting label="32114" id="clean_kodi_library" type="bool" default="true" visible="true" />
+        <setting label="32114" id="clean_library" type="bool" default="true" visible="true" />
         <setting label="32115" id="delete_folders" type="bool" default="false" visible="true" />
         <setting label="32116" id="ignore_extensions" type="text" default=".nfo, .nfo-orig, .tbn, .srt, .ass, .srr, .sfv, .nzb, .jpg, .png, .txt" subsetting="true" visible="eq(-1,true)" />
         <setting label="32117" id="clean_related" type="bool" default="false" visible="true" />

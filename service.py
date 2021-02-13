@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from default import Janitor
-from settings import *
-from utils import notify, debug
+from util.logging.kodi import notify, debug
+from util.settings import *
 
 
 def autostart():

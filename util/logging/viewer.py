@@ -3,7 +3,8 @@
 
 from xbmcgui import Dialog, WindowXMLDialog
 
-import utils
+from util.logging.janitor import Log
+from util.logging.kodi import translate
 
 
 class LogViewerDialog(WindowXMLDialog):
@@ -18,7 +19,7 @@ class LogViewerDialog(WindowXMLDialog):
     CLEARBUTTONID = 302
 
     def __init__(self, xml_filename, script_path, default_skin="Default", default_res="720p", *args, **kwargs):
-        self.log = utils.Log()
+        self.log = Log()
         WindowXMLDialog.__init__(self)
 
     def onInit(self):
@@ -26,10 +27,10 @@ class LogViewerDialog(WindowXMLDialog):
 
     def onClick(self, control_id, *args):
         if control_id == self.TRIMBUTTONID:
-            if Dialog().yesno(utils.translate(32604), utils.translate(32605)):
+            if Dialog().yesno(translate(32604), translate(32605)):
                 self.getControl(self.TEXTBOXID).setText(self.log.trim())
         elif control_id == self.CLEARBUTTONID:
-            if Dialog().yesno(utils.translate(32604), utils.translate(32606)):
+            if Dialog().yesno(translate(32604), translate(32606)):
                 self.getControl(self.TEXTBOXID).setText(self.log.clear())
         else:
             raise ValueError("Unknown button pressed")
