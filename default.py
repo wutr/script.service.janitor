@@ -11,7 +11,7 @@ from xbmcgui import DialogProgress
 
 from util import exclusions
 from util.addon_info import ADDON_NAME, ADDON_ID
-from util.disk import disk_space_low
+from util.disk import disk_space_low, split_stack
 from util.logging.kodi import debug
 from util.logging.viewer import *
 from util.settings import *
@@ -369,7 +369,7 @@ class Janitor(object):
             # Check at the beginning of each loop if the user pressed cancel
             # We do not want to cancel cleaning in the middle of a cycle to prevent issues with leftovers
             if not self.user_aborted():
-                unstacked_path = self.split_stack(filename)
+                unstacked_path = split_stack(filename)
                 if xbmcvfs.exists(unstacked_path[0]) and not self.is_hardlinked(filename):
                     cleaned_files = self.process_file(unstacked_path, filename, title)
                     count += len(cleaned_files)
@@ -469,17 +469,6 @@ class Janitor(object):
         # strip the comma and space from the last iteration and add the localized suffix
         return f"{summary.rstrip(', ')}{translate(32518)}" if summary else ""
 
-    @staticmethod
-    def split_stack(stacked_path):
-        """Split stack path if it is a stacked movie. See http://kodi.wiki/view/File_stacking for more info.
-
-        :type stacked_path: unicode
-        :param stacked_path: The stacked path that should be split.
-        :rtype: list
-        :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
-        """
-        return [element.replace("stack://", "") for element in stacked_path.split(" , ")]
-
     def get_common_prefix(self, filenames):
         """Find the common title of files part of a stack, minus the volume and file extension.
 
@@ -513,7 +502,7 @@ class Janitor(object):
         """
         debug("Attempting to delete {0}".format(location))
 
-        paths = self.split_stack(location)
+        paths = split_stack(location)
         success = []
 
         for p in paths:
@@ -543,7 +532,7 @@ class Janitor(object):
             debug("Deleting of empty folders is disabled.")
             return False
 
-        folder = self.split_stack(location)[0]  # Stacked paths should have the same parent, use any
+        folder = split_stack(location)[0]  # Stacked paths should have the same parent, use any
         debug(f"Checking if {folder} is empty")
         ignored_file_types = [file_ext.strip() for file_ext in get_value(ignore_extensions).split(",")]
         debug(f"Ignoring file types {ignored_file_types}")
@@ -601,7 +590,7 @@ class Janitor(object):
         if get_value(clean_related):
             debug("Cleaning related files.")
 
-            path_list = self.split_stack(source)
+            path_list = split_stack(source)
             path, name = os.path.split(path_list[0])  # Because stacked movies are in the same folder, only check one
             if source.startswith("stack://"):
                 name = self.get_common_prefix(path_list)
@@ -639,7 +628,7 @@ class Janitor(object):
         :rtype: bool
         :return: True if (all stacked) files were moved, False otherwise
         """
-        paths = self.split_stack(source)
+        paths = split_stack(source)
         files_moved_successfully = 0
         dest_folder = xbmcvfs.makeLegalFilename(dest_folder)
 
@@ -710,7 +699,7 @@ class Janitor(object):
         """
         if get_value(keep_hard_linked):
             debug("Making sure the number of hard links is exactly one.")
-            is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.split_stack(filename))))
+            is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, split_stack(filename))))
             debug("No hard links detected." if is_hard_linked else "Hard links detected. Skipping.")
             return True
         else:

@@ -92,3 +92,13 @@ def disk_space_low():
     """
     return get_free_disk_space(get_value(disk_space_check_path)) <= get_value(disk_space_threshold)
 
+
+def split_stack(stacked_path):
+    """Split stack path if it is a stacked movie. See http://kodi.wiki/view/File_stacking for more info.
+
+    :type stacked_path: unicode
+    :param stacked_path: The stacked path that should be split.
+    :rtype: list
+    :return: A list of paths that are part of the stack. If it is no stacked movie, a one-element list is returned.
+    """
+    return [element.replace("stack://", "") for element in stacked_path.split(" , ")]
