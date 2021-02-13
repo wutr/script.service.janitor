@@ -279,11 +279,9 @@ class Janitor(object):
         """
         self.silent = True
 
-    def process_file(self, unstacked_path, file_name, title):
+    def process_file(self, file_name, title):
         """Handle the cleaning of a video file, either via deletion or moving to another location
 
-        :param unstacked_path:
-        :type unstacked_path:
         :param file_name:
         :type file_name:
         :param title:
@@ -309,8 +307,8 @@ class Janitor(object):
             if move_file(file_name, new_path):
                 debug("File(s) moved successfully.")
                 count += 1
-                if len(unstacked_path) > 1:
-                    cleaned_files.extend(unstacked_path)
+                if is_stacked_file(file_name) and len(split_stack(file_name)) > 1:
+                    cleaned_files.extend(split_stack(file_name))
                 else:
                     cleaned_files.append(file_name)
                 self.clean_extras(file_name, new_path)
@@ -327,8 +325,8 @@ class Janitor(object):
             if delete_file(file_name):
                 debug("File(s) deleted successfully.")
                 count += 1
-                if len(unstacked_path) > 1:
-                    cleaned_files.extend(unstacked_path)
+                if is_stacked_file(file_name) and len(split_stack(file_name)) > 1:
+                    cleaned_files.extend(split_stack(file_name))
                 else:
                     cleaned_files.append(file_name)
                 self.clean_extras(file_name)
@@ -365,9 +363,8 @@ class Janitor(object):
             # Check at the beginning of each loop if the user pressed cancel
             # We do not want to cancel cleaning in the middle of a cycle to prevent issues with leftovers
             if not self.user_aborted():
-                unstacked_path = split_stack(filename)
-                if xbmcvfs.exists(unstacked_path[0]) and not is_hardlinked(filename):
-                    cleaned_files = self.process_file(unstacked_path, filename, title)
+                if file_exists(filename) and not is_hardlinked(filename):
+                    cleaned_files = self.process_file(filename, title)
                     count += len(cleaned_files)
                 else:
                     debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGWARNING)
@@ -546,7 +543,7 @@ class Janitor(object):
 
             path_list = split_stack(source)
             path, name = os.path.split(path_list[0])  # Because stacked movies are in the same folder, only check one
-            if source.startswith("stack://"):
+            if is_stacked_file(source):
                 name = get_common_prefix(path_list)
             else:
                 name, ext = os.path.splitext(name)

@@ -241,9 +241,27 @@ def get_common_prefix(filenames):
     return prefix
 
 
-#def file_exists(location):
-#    if stacked_file
-#        unstack
-#        file_exists(unstacked)
-#    else
-#        xbmcvfs.exists(location)
+def is_stacked_file(location):
+    """Test if this file is a stacked video file
+
+    :param location: The path from the Kodi database to test
+    :type location: str
+    :return: True if this is a stacked video file, False otherwise
+    :rtype: bool
+    """
+    return "stack://" in location
+
+
+def file_exists(location):
+    """Test if this file exists on disk
+
+    :param location: The file to test
+    :type location: str
+    :return: True if (all elements in the stack of) this file exist(s), False otherwise
+    :rtype: bool
+    """
+    if is_stacked_file(location):
+        # Recursively test for file existence across all stacked files
+        return all(map(file_exists, split_stack(location)))
+    else:
+        return xbmcvfs.exists(location)
