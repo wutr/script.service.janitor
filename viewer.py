@@ -1,8 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import utils
 from xbmcgui import Dialog, WindowXMLDialog
+
+import utils
 
 
 class LogViewerDialog(WindowXMLDialog):
@@ -25,10 +26,10 @@ class LogViewerDialog(WindowXMLDialog):
 
     def onClick(self, control_id, *args):
         if control_id == self.TRIMBUTTONID:
-            if Dialog().yesno(utils.translate(32604), utils.translate(32605), utils.translate(32607)):
+            if Dialog().yesno(utils.translate(32604), utils.translate(32605)):
                 self.getControl(self.TEXTBOXID).setText(self.log.trim())
         elif control_id == self.CLEARBUTTONID:
-            if Dialog().yesno(utils.translate(32604), utils.translate(32606), utils.translate(32607)):
+            if Dialog().yesno(utils.translate(32604), utils.translate(32606)):
                 self.getControl(self.TEXTBOXID).setText(self.log.clear())
         else:
             raise ValueError("Unknown button pressed")

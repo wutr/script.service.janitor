@@ -322,15 +322,11 @@ msgid "Are you sure?"
 msgstr ""
 
 msgctxt "#32605"
-msgid "This will trim the log file, keeping the first 25 lines."
+msgid "This will trim the log file, keeping the first 25 lines. This action is irreversible. Do you wish to continue?"
 msgstr ""
 
 msgctxt "#32606"
-msgid "This will delete the entire contents of the log file."
-msgstr ""
-
-msgctxt "#32607"
-msgid "This action is irreversible. Do you wish to continue?"
+msgid "This will delete the entire contents of the log file. This action is irreversible. Do you wish to continue?"
 msgstr ""
 
 msgctxt "#32608"

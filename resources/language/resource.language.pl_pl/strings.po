@@ -321,16 +321,12 @@ msgid "Are you sure?"
 msgstr "Jesteś pewny?"
 
 msgctxt "#32605"
-msgid "This will trim the log file, keeping the first 25 lines."
-msgstr "Ta akcja ograniczy dziennik do pierwszych 25 linijek."
+msgid "This will trim the log file, keeping the first 25 lines. This action is irreversible. Do you wish to continue?"
+msgstr "Ta akcja ograniczy dziennik do pierwszych 25 linijek. Ta akcja jest nieodwracalna. Chcesz kontynuować?"
 
 msgctxt "#32606"
-msgid "This will delete the entire contents of the log file."
-msgstr "Ta akcja wyczyści cały dziennik."
-
-msgctxt "#32607"
-msgid "This action is irreversible. Do you wish to continue?"
-msgstr "Ta akcja jest nieodwracalna. Chcesz kontynuować?"
+msgid "This will delete the entire contents of the log file. This action is irreversible. Do you wish to continue?"
+msgstr "Ta akcja wyczyści cały dziennik. Ta akcja jest nieodwracalna. Chcesz kontynuować?"
 
 msgctxt "#32608"
 msgid "Trim"
