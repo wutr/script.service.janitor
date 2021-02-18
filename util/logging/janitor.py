@@ -30,28 +30,31 @@ class Log(object):
         :param data: A list of strings to prepend to the log file.
         """
         if data:
+            previous_data = ""
+            debug("Prepending the log file with new data")
             try:
-                debug("Prepending the log file with new data.")
-                debug("Backing up current log.")
-                with open(self.logpath, "a+") as f:  # use append mode to make sure it is created if non-existent
+                debug("Backing up current log")
+                with open(self.logpath, "r") as f:
                     previous_data = f.read()
-            except (IOError, OSError) as err:
+            except (IOError, OSError, FileNotFoundError) as err:
                 debug(f"{err}", xbmc.LOGERROR)
-            else:
+                debug("Assuming there is no previous log data")
+                previous_data = ""
+            finally:
                 try:
                     with open(self.logpath, "w") as f:
-                        debug("Writing new log data.")
+                        debug("Writing new log data")
                         f.write(f"[B][{time.strftime('%d/%m/%Y  -  %H:%M:%S')}][/B]\n")
                         for line in data:
                             f.write(f" - {line}\n")
                         f.write("\n")
 
-                        debug("Appending previous log file contents.")
-                        f.writelines(previous_data.encode())
+                        debug("Appending previous log file contents")
+                        f.writelines(previous_data)
                 except (IOError, OSError) as err:
                     debug(f"{err}", xbmc.LOGERROR)
         else:
-            debug("Nothing to log.")
+            debug("Nothing to log")
 
     def trim(self, lines_to_keep=25):
         """
