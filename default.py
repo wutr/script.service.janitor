@@ -5,13 +5,13 @@ import json
 import sys
 
 import xbmcgui
-from xbmcgui import DialogProgress
+from xbmcgui import DialogProgress, Dialog
 
 from util import exclusions
 from util.addon_info import ADDON_NAME, ADDON_ID
 from util.disk import *
+from util.logging.janitor import LogViewerDialog, Log
 from util.logging.kodi import debug
-from util.logging.viewer import *
 from util.settings import *
 
 MOVIES = "movies"

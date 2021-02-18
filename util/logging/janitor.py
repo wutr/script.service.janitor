@@ -107,7 +107,7 @@ class Log(object):
         """
         try:
             debug("Retrieving log file contents.")
-            with open(self.logpath, "a+") as f:
+            with open(self.logpath, "r") as f:
                 contents = f.read()
         except (IOError, OSError) as err:
             debug(f"{err}", xbmc.LOGERROR)
@@ -128,7 +128,7 @@ class LogViewerDialog(WindowXMLDialog):
 
     def __init__(self, xml_filename, script_path, default_skin="Default", default_res="720p", *args, **kwargs):
         self.log = Log()
-        WindowXMLDialog.__init__(self)
+        WindowXMLDialog.__init__(self, xml_filename, script_path, default_skin, default_res)
 
     def onInit(self):
         self.getControl(self.TEXTBOXID).setText(self.log.get())
@@ -142,5 +142,3 @@ class LogViewerDialog(WindowXMLDialog):
                 self.getControl(self.TEXTBOXID).setText(self.log.clear())
         else:
             raise ValueError("Unknown button pressed")
-
-
