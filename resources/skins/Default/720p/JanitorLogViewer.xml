@@ -38,7 +38,7 @@
                 <bottom>116</bottom>
                 <onleft>302</onleft>
                 <orientation>vertical</orientation>
-                <animation effect="slide" end="18,0" time="300" tween="sine" easing="inout" condition="!Control.HasFocus(203)">conditional</animation>
+                <showonepage>true</showonepage>
             </control>
             <control type="image" id="11">
                 <description>Top separator</description>
