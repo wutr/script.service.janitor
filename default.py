@@ -372,15 +372,15 @@ class Janitor(object):
                 if not self.silent:
                     # TODO: this now fails because get_expired_videos is a generator
                     # TODO: maybe we'd better just display the video file that is being cleaned
-                    debug(f"Found {self.total_expired} videos that may need cleaning.")
                     try:
                         # TODO: Incorporate number of video types being cleaned into the calculation
                         progress_percent += 1 / self.total_expired * 100
                     except ZeroDivisionError:
                         progress_percent += 0  # No videos found that need cleaning
-                    # debug(f"Progress percent is {progress_percent}, amount is {self.total_expired} and increment is {increment}")
-                    xbmcgui.DialogProgress()
-                    self.progress.update(int(progress_percent), translate(32616).format(amount=self.total_expired, type=type_translation[video_type], title=title))
+
+                    filenames = "\n".join(map(os.path.basename, split_stack(filename)))
+                    progress_text = f"[B]{translate(32618).format(type=video_type)}[/B]\n{filenames}"
+                    self.progress.update(int(progress_percent), progress_text)
                     self.monitor.waitForAbort(2)
             else:
                 debug(f"We had {self.total_expired - count} {type_translation[video_type]} left to clean.")
