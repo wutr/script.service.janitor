@@ -4,7 +4,6 @@
 import json
 import sys
 
-import xbmcgui
 from xbmcgui import DialogProgress, Dialog
 
 from util import exclusions
@@ -18,6 +17,7 @@ MOVIES = "movies"
 MUSIC_VIDEOS = "musicvideos"
 TVSHOWS = "episodes"
 KNOWN_VIDEO_TYPES = (MOVIES, MUSIC_VIDEOS, TVSHOWS)
+LOCALIZED_VIDEO_TYPES = {MOVIES: translate(32626), MUSIC_VIDEOS: translate(32627), TVSHOWS: translate(32628)}
 
 
 class Database(object):
@@ -160,15 +160,15 @@ class Database(object):
         video_types = (TVSHOWS, MOVIES, MUSIC_VIDEOS)
         setting_types = (clean_tv_shows, clean_movies, clean_music_videos)
 
+        # TODO: Is this loop still required? Maybe settings_types[video_type] is sufficient?
         for type, setting in zip(video_types, setting_types):
             if type == video_type and get_value(setting):
                 # Do the actual work here
                 query = self.prepare_query(video_type)
                 result = self.execute_query(query)
-                totals = int(result["limits"]["total"])
 
                 try:
-                    debug(f"Found {totals} watched {video_type} matching your conditions")
+                    debug(f"Found {result['limits']['total']} watched {video_type} matching your conditions")
                     debug(f"JSON Response: {result}")
                     for video in result[video_type]:
                         # Gather all properties and add it to this video's information
@@ -180,7 +180,7 @@ class Database(object):
                     if video_type in str(ke):
                         pass  # no expired videos found
                     else:
-                        raise KeyError(f"Could not find key {ke} in response.")
+                        raise KeyError(f"Could not find key {ke} in response.") from ke
                 finally:
                     debug("Breaking the loop")
                     break  # Stop looping after the first match for video_type
@@ -253,17 +253,19 @@ class Janitor(object):
         debug(f"{ADDON.getAddonInfo('name')} version {ADDON.getAddonInfo('version')} loaded.")
         self.db = Database()
 
-    def user_aborted(self):
+    def user_aborted(self, progress_dialog):
         """
         Test if the progress dialog has been canceled by the user. If the cleaner was started as a service this will
         always return False
+
+        :param progress_dialog: The dialog to check for cancellation
+        :type progress_dialog: DialogProgress
         :rtype: bool
         :return: True if the user cancelled cleaning, False otherwise.
         """
         if self.silent:
             return False
-        elif self.progress.iscanceled():
-            debug("User canceled.", xbmc.LOGWARNING)
+        elif progress_dialog.iscanceled():
             self.exit_status = self.STATUS_ABORTED
             return True
 
@@ -338,21 +340,17 @@ class Janitor(object):
 
             return cleaned_files
 
-    def clean_category(self, video_type):
+    def clean_category(self, video_type, progress_dialog):
         """
         Clean all watched videos of the provided type.
 
         :type video_type: unicode
         :param video_type: The type of videos to clean (one of TVSHOWS, MOVIES, MUSIC_VIDEOS).
+        :param progress_dialog: The dialog that is used to display the progress in
+        :type progress_dialog: DialogProgress
         :rtype: (list, int, int)
         :return: A list of the filenames that were cleaned, as well as the number of files cleaned and the return status.
         """
-        type_translation = {MOVIES: translate(32626), MUSIC_VIDEOS: translate(32627), TVSHOWS: translate(32628)}
-
-        if not self.silent:
-            # Cleaning <video type>
-            self.progress.update(0, translate(32629).format(type=type_translation[video_type]))
-            self.monitor.waitForAbort(1)
 
         # Reset counters
         cleaned_files = []
@@ -362,7 +360,11 @@ class Janitor(object):
         for filename, title in self.db.get_expired_videos(video_type):
             # Check at the beginning of each loop if the user pressed cancel
             # We do not want to cancel cleaning in the middle of a cycle to prevent issues with leftovers
-            if not self.user_aborted():
+            if self.user_aborted(progress_dialog):
+                self.exit_status = self.STATUS_ABORTED
+                progress_dialog.close()
+                break
+            else:
                 if file_exists(filename) and not is_hardlinked(filename):
                     cleaned_files = self.process_file(filename, title)
                     count += len(cleaned_files)
@@ -370,24 +372,18 @@ class Janitor(object):
                     debug(f"Not cleaning {filename}. It may have already been removed.", xbmc.LOGWARNING)
 
                 if not self.silent:
-                    # TODO: this now fails because get_expired_videos is a generator
-                    # TODO: maybe we'd better just display the video file that is being cleaned
-                    try:
-                        # TODO: Incorporate number of video types being cleaned into the calculation
-                        progress_percent += 1 / self.total_expired * 100
-                    except ZeroDivisionError:
-                        progress_percent += 0  # No videos found that need cleaning
-
-                    filenames = "\n".join(map(os.path.basename, split_stack(filename)))
-                    progress_text = f"[B]{translate(32618).format(type=video_type)}[/B]\n{filenames}"
-                    self.progress.update(int(progress_percent), progress_text)
+                    file_names = "\n".join(map(os.path.basename, split_stack(filename)))
+                    progress_dialog.update(int(progress_percent), file_names)
                     self.monitor.waitForAbort(2)
-            else:
-                debug(f"We had {self.total_expired - count} {type_translation[video_type]} left to clean.")
         else:
             if not self.silent:
-                self.progress.update(0, translate(32624).format(type=type_translation[video_type]))
+                # TODO: Localize this dialog string
+                progress_dialog.update(100, f"Finished cleaning {LOCALIZED_VIDEO_TYPES[video_type]}")
                 self.monitor.waitForAbort(2)
+
+            if self.user_aborted(progress_dialog):
+                # Prevent another dialog from appearing if the user aborts after all of this video_type were already cleaned
+                self.exit_status = self.STATUS_ABORTED
 
         return cleaned_files, count, self.exit_status
 
@@ -406,19 +402,29 @@ class Janitor(object):
 
         results = {}
         cleaning_results, cleaned_files = [], []
+
         if not get_value(clean_when_low_disk_space) or (get_value(clean_when_low_disk_space) and disk_space_low()):
-            if not self.silent:
-                self.progress.create(ADDON_NAME)  # TODO: Make this a standalone dialog for each video type
-                self.progress.update(0)
-                self.monitor.waitForAbort(2)
             for video_type in KNOWN_VIDEO_TYPES:
-                if not self.user_aborted():
-                    cleaned_files, count, status = self.clean_category(video_type)
-                    if count > 0:
-                        cleaning_results.extend(cleaned_files)
-                        results[video_type] = count
-            if not self.silent:
-                self.progress.close()
+                if self.exit_status != self.STATUS_ABORTED:
+                    progress = DialogProgress()
+                    if not self.silent:
+                        progress.create(f"{ADDON_NAME} - {LOCALIZED_VIDEO_TYPES[video_type].capitalize()}")
+                        progress_text = f"{translate(32618).format(type=LOCALIZED_VIDEO_TYPES[video_type])}"
+                        progress.update(0, progress_text)
+                        self.monitor.waitForAbort(2)
+                    if self.user_aborted(progress):
+                        progress.close()
+                        break
+                    else:
+                        cleaned_files, count, status = self.clean_category(video_type, progress)
+                        if count > 0:
+                            cleaning_results.extend(cleaned_files)
+                            results[video_type] = count
+                        if not self.silent:
+                            progress.close()
+                else:
+                    debug("User aborted.")
+                    break
 
         self.clean_library(cleaning_results)
 
