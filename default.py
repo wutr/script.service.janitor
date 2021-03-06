@@ -619,8 +619,13 @@ class Cleaner(object):
         """
         if get_setting(keep_hard_linked):
             debug(u"Making sure the number of hard links is exactly one.")
-            is_hard_linked = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
-            debug(u"No hard links detected." if is_hard_linked else u"Hard links detected. Skipping.")
+            is_hard_linked_only_once = all(i == 1 for i in map(xbmcvfs.Stat.st_nlink, map(xbmcvfs.Stat, self.unstack(filename))))
+            if is_hard_linked_only_once:
+                debug(u"No hard links detected.")
+                return True
+            else:
+                debug(u"Hard links detected. Skipping.")
+                return False
         else:
             debug(u"Not checking for hard links.")
             return True
